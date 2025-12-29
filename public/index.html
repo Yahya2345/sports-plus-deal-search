@@ -1087,13 +1087,17 @@
       // After rendering, populate editable fields with merged values from Sheets
       setTimeout(() => {
         lineItems.forEach((li, idx) => {
-          const actualShippingDateInput = document.querySelector(`input[data-field="Actual Shipping Date"][data-li-idx="${idx + 1}"]`);
-          const inspectorSelect = document.querySelector(`select[data-field="Inspector"][data-li-idx="${idx + 1}"]`);
-          const inspectionStatusSelect = document.querySelector(`select[data-field="Inspection Status"][data-li-idx="${idx + 1}"]`);
-          const movedToOtherShelfSelect = document.querySelector(`select[data-field="Moved to Other Shelf"][data-li-idx="${idx + 1}"]`);
-          const inspectionNotesTextarea = document.querySelector(`textarea[data-field="Inspection Notes"][data-li-idx="${idx + 1}"]`);
-          const shelfLocationInput = document.querySelector(`input[data-field="Shelf Location"][data-li-idx="${idx + 1}"]`);
-          const newShelfLocationInput = document.querySelector(`input[data-field="New Shelf Location"][data-li-idx="${idx + 1}"]`);
+          const poNumber = invoice['PO Number'];
+          const siDocNumber = invoice['SI Doc Number'];
+          const liIdx = idx + 1;
+
+          const actualShippingDateInput = document.querySelector(`input[data-field="Actual Shipping Date"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const inspectorSelect = document.querySelector(`select[data-field="Inspector"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const inspectionStatusSelect = document.querySelector(`select[data-field="Inspection Status"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const movedToOtherShelfSelect = document.querySelector(`select[data-field="Moved to Other Shelf"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const inspectionNotesTextarea = document.querySelector(`textarea[data-field="Inspection Notes"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const shelfLocationInput = document.querySelector(`input[data-field="Shelf Location"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+          const newShelfLocationInput = document.querySelector(`input[data-field="New Shelf Location"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
 
           if (actualShippingDateInput && li.actualShippingDate) actualShippingDateInput.value = li.actualShippingDate;
           if (inspectorSelect && li.inspector) inspectorSelect.value = li.inspector;
