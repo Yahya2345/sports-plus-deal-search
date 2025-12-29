@@ -104,6 +104,49 @@ async function handleSearch(event) {
     }
   }
 
+  // Fetch existing data from Sheets to merge editable fields
+  let sheetLineItems = [];
+  try {
+    sheetLineItems = await googleSheets.getLineItemsForPO(query);
+    console.log(`✓ Found ${sheetLineItems.length} existing line items in Google Sheet for PO ${query}`);
+  } catch (err) {
+    console.warn('Google Sheet read skipped:', err.message);
+  }
+
+  // Build map of editable fields from Sheets by key: PO|SIDoc|LineItemIndex
+  const sheetEditsMap = new Map();
+  sheetLineItems.forEach((item) => {
+    const key = `${item['PO Number']}|${item['SI Doc Number']}|${item['Line Item Index']}`;
+    sheetEditsMap.set(key, {
+      'Actual Shipping Date': item['Actual Shipping Date'],
+      'Inspector': item['Inspector'],
+      'Inspection Status': item['Inspection Status'],
+      'Inspection Notes': item['Inspection Notes'],
+      'Shelf Location': item['Shelf Location'],
+      'Moved to Other Shelf': item['Moved to Other Shelf'],
+      'New Shelf Location': item['New Shelf Location']
+    });
+  });
+
+  // Merge editable fields from Sheets into API invoices
+  for (const invoice of invoices) {
+    if (Array.isArray(invoice._lineItems)) {
+      invoice._lineItems.forEach((lineItem, idx) => {
+        const key = `${invoice['PO Number']}|${invoice['SI Doc Number']}|${idx + 1}`;
+        const sheetEdits = sheetEditsMap.get(key);
+        if (sheetEdits) {
+          lineItem.actualShippingDate = sheetEdits['Actual Shipping Date'];
+          lineItem.inspector = sheetEdits['Inspector'];
+          lineItem.inspectionStatus = sheetEdits['Inspection Status'];
+          lineItem.inspectionNotes = sheetEdits['Inspection Notes'];
+          lineItem.shelfLocation = sheetEdits['Shelf Location'];
+          lineItem.movedToOtherShelf = sheetEdits['Moved to Other Shelf'];
+          lineItem.newShelfLocation = sheetEdits['New Shelf Location'];
+        }
+      });
+    }
+  }
+
   const hubspotDeals = await searchHubSpotDeals(query).catch((err) => {
     console.error('HubSpot fetch error:', err.message);
     return [];
