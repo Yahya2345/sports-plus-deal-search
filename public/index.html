@@ -641,7 +641,7 @@
     async function unifiedSearch(query) {
       console.log('🔍 Starting unified search for:', query);
 
-      const response = await fetch('/api/search', {
+      const response = await fetch('/.netlify/functions/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -663,7 +663,7 @@
       console.log('Fetching line items for deal:', dealId);
 
       try {
-        const response = await fetch('/api/hubspot/lineItems', {
+        const response = await fetch('/.netlify/functions/api/hubspot/lineItems', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1282,7 +1282,7 @@
       statusEl.textContent = 'Saving...';
       btn.disabled = true;
       try {
-        const resp = await fetch('/api/hubspot/lineItems/batchUpdate', {
+        const resp = await fetch('/.netlify/functions/api/hubspot/lineItems/batchUpdate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ updates })
@@ -1341,7 +1341,7 @@
 
       try {
         for (const p of payloads) {
-          const resp = await fetch('/api/updateLineItemsBulk', {
+          const resp = await fetch('/.netlify/functions/api/updateLineItemsBulk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(p)
