@@ -126,6 +126,7 @@ async function handleSearch(event) {
       'Moved to Other Shelf': item['Moved to Other Shelf'],
       'New Shelf Location': item['New Shelf Location']
     });
+    console.log(`📝 Mapped Sheet edits for key: ${key}`);
   });
 
   // Merge editable fields from Sheets into API invoices
@@ -135,6 +136,7 @@ async function handleSearch(event) {
         const key = `${invoice['PO Number']}|${invoice['SI Doc Number']}|${idx + 1}`;
         const sheetEdits = sheetEditsMap.get(key);
         if (sheetEdits) {
+          console.log(`✓ Merging edits for ${key}:`, sheetEdits);
           lineItem.actualShippingDate = sheetEdits['Actual Shipping Date'];
           lineItem.inspector = sheetEdits['Inspector'];
           lineItem.inspectionStatus = sheetEdits['Inspection Status'];
