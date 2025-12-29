@@ -382,6 +382,8 @@ exports.handler = async (event) => {
 
   const path = normalizePath(event);
   const method = event.httpMethod || 'GET';
+  
+  console.log('API Request:', { rawPath: event.path, normalizedPath: path, method });
 
   try {
     if (path === '/search' && method === 'POST') return await handleSearch(event);
