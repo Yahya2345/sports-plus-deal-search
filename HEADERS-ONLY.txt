@@ -1,0 +1,60 @@
+# GOOGLE SHEET COLUMN HEADERS - READY TO USE
+
+## 🎯 COPY EXACTLY ONE OF THESE INTO YOUR GOOGLE SHEET
+
+### MINIMAL VERSION (14 Columns) - RECOMMENDED 
+
+```
+PO Number	SI Doc Number	SI Doc Date	Supplier Name	Ship Date	Invoice Total	Invoice Status	Line Item Index	Item Description	Quantity Shipped	Unit Price	Line Item Total	Item Status	Last Updated
+```
+
+**Column Positions (A through N):**
+- A: PO Number
+- B: SI Doc Number
+- C: SI Doc Date
+- D: Supplier Name
+- E: Ship Date
+- F: Invoice Total
+- G: Invoice Status
+- H: Line Item Index
+- I: Item Description
+- J: Quantity Shipped
+- K: Unit Price
+- L: Line Item Total
+- M: Item Status
+- N: Last Updated
+
+---
+
+### FULL VERSION (50 Columns)
+
+```
+PO Number	SI Doc Number	SI Doc Date	Supplier Doc Number	Supplier Doc Date	Supplier Name	Ship Date	Requested Ship Date	Invoice Status	Merchandise Total	Freight Amount	Discount Amount	Sales Tax	Excise Tax	SI Upcharge	Service/Handling Charge	Invoice Total	Tracking Number	Method of Payment	Freight Allowance	Ship To Name	Ship To Address	Ship To Address 2	Ship To City	Ship To State	Ship To Zip	Supplier Address	Supplier Address 2	Supplier City	Supplier State	Supplier Zip	Supplier Phone	Supplier Fax	Line Item Index	Item Description	Supplier Item Number	UPC	Size	Color	Quantity Ordered	Quantity Shipped	Unit Price	Net Price	List Price	Line Item Total	Item Status	Last Updated	Notes
+```
+
+---
+
+## HOW TO USE
+
+1. Go to: https://docs.google.com/spreadsheets/d/1H7AT9aFP8Z4izzHmZ0f-tOkXpPYC4tdgyWUQQE_jfNk
+2. Click "Sheet1" tab
+3. Click cell A1
+4. Copy the headers above (the one you chose)
+5. Paste (Ctrl+V)
+6. Press Enter
+7. Save (Ctrl+S)
+8. Done!
+
+---
+
+## WHAT TO TELL ME NEXT
+
+Once headers are created, reply with:
+
+✅ I created MINIMAL version (14 columns)
+
+OR
+
+✅ I created FULL version (50 columns)
+
+Then I'll build the auto-save feature!

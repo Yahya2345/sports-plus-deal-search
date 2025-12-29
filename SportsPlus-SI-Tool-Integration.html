@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportsPlus SI Tool Integration - Technical Documentation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .cover-page {
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .cover-page h1 {
+            font-size: 42px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cover-page h2 {
+            font-size: 24px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .cover-page .version {
+            font-size: 16px;
+            color: #95a5a6;
+            margin-top: 40px;
+        }
+
+        .cover-page .date {
+            font-size: 14px;
+            color: #bdc3c7;
+            margin-top: 10px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        h2 {
+            color: #34495e;
+            font-size: 24px;
+            margin: 25px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        h3 {
+            color: #546e7a;
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .diagram-container {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        .diagram-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .flowchart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .flow-box {
+            background: #fff;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            padding: 15px 25px;
+            min-width: 250px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .flow-box.start {
+            background: #3498db;
+            color: white;
+            border-radius: 30px;
+        }
+
+        .flow-box.end {
+            background: #27ae60;
+            color: white;
+            border-radius: 30px;
+        }
+
+        .flow-box.process {
+            background: #fff;
+            border-color: #3498db;
+        }
+
+        .flow-box.decision {
+            background: #f39c12;
+            color: white;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            min-width: 280px;
+            padding: 20px 30px;
+        }
+
+        .flow-box.api {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .split-flow {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .split-flow .flow-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info-box.warning {
+            background: #fff3cd;
+            border-left-color: #f39c12;
+        }
+
+        .info-box.success {
+            background: #d4edda;
+            border-left-color: #27ae60;
+        }
+
+        ul, ol {
+            margin: 10px 0 10px 30px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        .tech-stack-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-card {
+            background: #fff;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .tech-card h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .tech-card ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tech-card li {
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        .architecture-diagram {
+            background: #fff;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .layer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .layer.frontend {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .layer.backend {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .layer.integration {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .layer.hosting {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .api-endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 11px;
+        }
+
+        .endpoint-method.post {
+            background: #27ae60;
+        }
+
+        .endpoint-method.get {
+            background: #3498db;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .toc h2 {
+            border: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            padding: 5px 0;
+        }
+
+        .toc a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <h1>SportsPlus SI Tool Integration</h1>
+        <h2>Technical Architecture & Implementation Documentation</h2>
+        <div style="margin: 40px 0;">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="90" fill="#3498db" opacity="0.1"/>
+                <circle cx="100" cy="100" r="70" fill="#3498db" opacity="0.2"/>
+                <circle cx="100" cy="100" r="50" fill="#3498db" opacity="0.3"/>
+                <path d="M 100 50 L 120 90 L 160 90 L 130 115 L 145 155 L 100 130 L 55 155 L 70 115 L 40 90 L 80 90 Z" fill="#3498db"/>
+            </svg>
+        </div>
+        <div class="version">Version 2.0.0</div>
+        <div class="date">December 2025</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li>1. Executive Summary</li>
+            <li>2. Project Overview</li>
+            <li>3. System Architecture</li>
+            <li>4. Technology Stack</li>
+            <li>5. Application Flow</li>
+            <li>6. API Integration Details</li>
+            <li>7. Data Flow Architecture</li>
+            <li>8. Security & Authentication</li>
+            <li>9. Deployment Strategy</li>
+            <li>10. Technical Specifications</li>
+        </ul>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="section">
+        <h1>1. Executive Summary</h1>
+        <p>
+            The SportsPlus SI Tool Integration is a cloud-based web application designed to streamline the process
+            of searching and managing Sports Plus deals. The system integrates HubSpot CRM with planned Sports Inc
+            EDI invoice data, providing a unified interface for sales order management.
+        </p>
+
+        <div class="info-box success">
+            <strong>Key Benefits:</strong>
+            <ul>
+                <li>Unified search interface for Sales Order Numbers</li>
+                <li>Real-time HubSpot CRM integration</li>
+                <li>Scalable serverless architecture</li>
+                <li>Zero infrastructure management required</li>
+                <li>Secure API token management</li>
+            </ul>
+        </div>
+
+        <p>
+            The application leverages Netlify's serverless functions to create a secure, scalable, and cost-effective
+            solution that eliminates the need for traditional server infrastructure while maintaining enterprise-grade
+            security and performance.
+        </p>
+    </div>
+
+    <!-- Project Overview -->
+    <div class="section">
+        <h1>2. Project Overview</h1>
+
+        <h2>2.1 Purpose</h2>
+        <p>
+            This application serves as a centralized hub for Sports Plus sales operations, enabling users to quickly
+            search for deals by Sales Order Number and view comprehensive deal information including associated line
+            items. The system is designed to replace manual HubSpot navigation with a streamlined, purpose-built interface.
+        </p>
+
+        <h2>2.2 Core Functionality</h2>
+        <ul>
+            <li><strong>Search:</strong> Fast, debounced search by Sales Order Number</li>
+            <li><strong>Deal Display:</strong> Comprehensive view of deal properties (name, amount, close date, pipeline, stage)</li>
+            <li><strong>Line Items:</strong> Expandable view showing associated products (name, quantity, price, amount, description)</li>
+            <li><strong>Real-time Data:</strong> Direct integration with HubSpot CRM API v3</li>
+        </ul>
+
+        <h2>2.3 Future Enhancements</h2>
+        <div class="info-box">
+            <strong>Planned Integrations:</strong>
+            <ul>
+                <li>Sports Inc Tool API for EDI invoice data</li>
+                <li>Google Sheets caching layer for performance optimization</li>
+                <li>Two-column comparison view (Invoice vs. HubSpot data)</li>
+                <li>Editable HubSpot fields directly from the interface</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- System Architecture -->
+    <div class="section" style="page-break-before: always;">
+        <h1>3. System Architecture</h1>
+
+        <div class="architecture-diagram">
+            <h3 style="text-align: center; margin-bottom: 20px;">System Architecture Layers</h3>
+
+            <div class="layer frontend">
+                PRESENTATION LAYER<br>
+                Single-Page Application (Vanilla JavaScript)
+            </div>
+
+            <div class="layer backend">
+                APPLICATION LAYER<br>
+                Netlify Serverless Functions (Node.js)
+            </div>
+
+            <div class="layer integration">
+                INTEGRATION LAYER<br>
+                HubSpot CRM API v3 | Sports Inc API (Planned)
+            </div>
+
+            <div class="layer hosting">
+                INFRASTRUCTURE LAYER<br>
+                Netlify CDN & Edge Network
+            </div>
+        </div>
+
+        <h2>3.1 Architecture Principles</h2>
+        <ul>
+            <li><strong>Serverless-First:</strong> No server management, automatic scaling</li>
+            <li><strong>API-Driven:</strong> Clean separation between frontend and backend</li>
+            <li><strong>Security by Design:</strong> API tokens never exposed to client</li>
+            <li><strong>Performance-Optimized:</strong> CDN delivery, debounced searches</li>
+            <li><strong>Maintainability:</strong> Single HTML file for frontend simplicity</li>
+        </ul>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="section">
+        <h1>4. Technology Stack</h1>
+
+        <div class="tech-stack-grid">
+            <div class="tech-card">
+                <h4>Frontend</h4>
+                <ul>
+                    <li>HTML5</li>
+                    <li>CSS3 (Grid/Flexbox)</li>
+                    <li>Vanilla JavaScript ES6+</li>
+                    <li>Fetch API</li>
+                </ul>
+            </div>
+
+            <div class="tech-card">
+                <h4>Backend</h4>
+                <ul>
+                    <li>Node.js 18.x</li>
+                    <li>Netlify Functions</li>
+                    <li>Axios HTTP Client</li>
+                    <li>dotenv</li>
+                </ul>
+            </div>
+
+            <div class="tech-card">
+                <h4>APIs & Integration</h4>
+                <ul>
+                    <li>HubSpot CRM API v3</li>
+                    <li>Sports Inc API (Planned)</li>
+                    <li>Google Sheets API (Planned)</li>
+                </ul>
+            </div>
+
+            <div class="tech-card">
+                <h4>Hosting & Deployment</h4>
+                <ul>
+                    <li>Netlify Platform</li>
+                    <li>Netlify CLI</li>
+                    <li>Git-based Deployment</li>
+                    <li>Environment Variables</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>4.1 Technology Decisions</h2>
+
+        <h3>Why Netlify Serverless Functions?</h3>
+        <ul>
+            <li>Automatic scaling based on demand</li>
+            <li>Zero infrastructure management</li>
+            <li>Cost-effective (pay-per-execution model)</li>
+            <li>Built-in HTTPS and CDN</li>
+            <li>Seamless integration with frontend hosting</li>
+        </ul>
+
+        <h3>Why Vanilla JavaScript?</h3>
+        <ul>
+            <li>No build process required</li>
+            <li>Faster page load times</li>
+            <li>Easier debugging and maintenance</li>
+            <li>Lower complexity for simple UI needs</li>
+        </ul>
+    </div>
+
+    <!-- Application Flow -->
+    <div class="section" style="page-break-before: always;">
+        <h1>5. Application Flow</h1>
+
+        <div class="diagram-container">
+            <div class="diagram-title">Complete User Interaction Flow</div>
+            <div class="flowchart">
+                <div class="flow-box start">User Opens Application</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Frontend Loads (index.html)</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">User Enters Sales Order Number</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">500ms Debounce Delay<br>(Prevents Excessive API Calls)</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box api">POST /.netlify/functions/searchDeals<br>Body: { "query": "SO-12345" }</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Serverless Function Authenticates<br>with HubSpot API</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box api">HubSpot API v3 Search<br>/crm/v3/objects/deals/search</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Results Returned to Frontend<br>(Up to 100 Deals)</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Deal Cards Rendered<br>Display: Name, Amount, Date, Stage</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box decision">User Clicks "Show Line Items"?</div>
+                <div class="flow-arrow">↓ Yes</div>
+                <div class="flow-box api">POST /.netlify/functions/getLineItems<br>Body: { "dealId": "123456789" }</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Fetch Deal Associations<br>GET /crm/v3/objects/deals/{id}?associations=line_items</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Batch Fetch Line Item Details<br>POST /crm/v3/objects/line_items/batch/read</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Line Items Rendered in Table<br>Display: Name, Quantity, Price, Amount</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box end">User Views Complete Deal Information</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Integration Details -->
+    <div class="section" style="page-break-before: always;">
+        <h1>6. API Integration Details</h1>
+
+        <h2>6.1 Serverless Function: searchDeals</h2>
+
+        <div class="api-endpoint">
+            <span class="endpoint-method post">POST</span>
+            <strong>/.netlify/functions/searchDeals</strong>
+        </div>
+
+        <h3>Purpose</h3>
+        <p>Searches HubSpot CRM for deals matching a Sales Order Number.</p>
+
+        <h3>Request Body</h3>
+        <div class="code-block">
+{
+  "query": "SO-12345"
+}
+        </div>
+
+        <h3>HubSpot API Call</h3>
+        <div class="code-block">
+POST https://api.hubapi.com/crm/v3/objects/deals/search
+
+Headers:
+  Authorization: Bearer {HUBSPOT_ACCESS_TOKEN}
+  Content-Type: application/json
+
+Body:
+{
+  "filterGroups": [{
+    "filters": [{
+      "propertyName": "sales_order_",
+      "operator": "EQ",
+      "value": "SO-12345"
+    }]
+  }],
+  "properties": [],  // Fetches all deal properties
+  "limit": 100
+}
+        </div>
+
+        <h3>Response</h3>
+        <div class="code-block">
+{
+  "deals": [
+    {
+      "id": "123456789",
+      "properties": {
+        "dealname": "Acme Corp - Q4 Order",
+        "amount": "5000",
+        "closedate": "2025-12-31T00:00:00.000Z",
+        "pipeline": "default",
+        "dealstage": "closedwon",
+        "sales_order_": "SO-12345"
+        // ... all other properties
+      }
+    }
+  ]
+}
+        </div>
+
+        <h3>Key Implementation Details</h3>
+        <ul>
+            <li><strong>Search Operator:</strong> EQ (exact match) on sales_order_ property</li>
+            <li><strong>Property Suffix:</strong> sales_order_ includes underscore (critical)</li>
+            <li><strong>Limit:</strong> Maximum 100 results per search</li>
+            <li><strong>Properties:</strong> Empty array fetches all available properties</li>
+        </ul>
+
+        <div class="info-box warning">
+            <strong>Important:</strong> The HubSpot access token is stored securely in environment variables and
+            never exposed to the frontend. All API calls are proxied through serverless functions.
+        </div>
+
+        <h2>6.2 Serverless Function: getLineItems</h2>
+
+        <div class="api-endpoint">
+            <span class="endpoint-method post">POST</span>
+            <strong>/.netlify/functions/getLineItems</strong>
+        </div>
+
+        <h3>Purpose</h3>
+        <p>Fetches line items associated with a specific deal in a two-step process.</p>
+
+        <h3>Request Body</h3>
+        <div class="code-block">
+{
+  "dealId": "123456789"
+}
+        </div>
+
+        <h3>Step 1: Fetch Deal Associations</h3>
+        <div class="code-block">
+GET https://api.hubapi.com/crm/v3/objects/deals/{dealId}?associations=line_items
+
+Headers:
+  Authorization: Bearer {HUBSPOT_ACCESS_TOKEN}
+        </div>
+
+        <h3>Step 2: Batch Fetch Line Item Details</h3>
+        <div class="code-block">
+POST https://api.hubapi.com/crm/v3/objects/line_items/batch/read
+
+Body:
+{
+  "properties": ["name", "quantity", "price", "amount", "description"],
+  "inputs": [
+    { "id": "789" },
+    { "id": "790" }
+  ]
+}
+        </div>
+
+        <h3>Response</h3>
+        <div class="code-block">
+{
+  "lineItems": [
+    {
+      "id": "789",
+      "properties": {
+        "name": "Custom Jersey - Large",
+        "quantity": "50",
+        "price": "45.00",
+        "amount": "2250.00",
+        "description": "Blue team jerseys with logo"
+      }
+    },
+    {
+      "id": "790",
+      "properties": {
+        "name": "Team Shorts - Large",
+        "quantity": "50",
+        "price": "25.00",
+        "amount": "1250.00",
+        "description": "Matching shorts"
+      }
+    }
+  ]
+}
+        </div>
+
+        <h3>Why Two Steps?</h3>
+        <ul>
+            <li>HubSpot requires first fetching association IDs</li>
+            <li>Then batch-fetching detailed properties</li>
+            <li>More efficient than individual requests per line item</li>
+            <li>Supports retrieving specific properties only</li>
+        </ul>
+    </div>
+
+    <!-- Data Flow Architecture -->
+    <div class="section" style="page-break-before: always;">
+        <h1>7. Data Flow Architecture</h1>
+
+        <div class="diagram-container">
+            <div class="diagram-title">Current Implementation - HubSpot Integration</div>
+            <div class="flowchart">
+                <div class="flow-box start">User Search Request</div>
+                <div class="flow-arrow">↓</div>
+
+                <div style="background: #ecf0f1; padding: 20px; border-radius: 8px; border: 2px solid #3498db;">
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 15px; color: #2c3e50;">
+                        FRONTEND (Browser)
+                    </div>
+                    <div class="flow-box" style="margin: 10px auto; max-width: 400px;">
+                        index.html<br>
+                        - Search input with 500ms debounce<br>
+                        - Fetch API calls<br>
+                        - Dynamic DOM manipulation
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓ HTTPS Request</div>
+
+                <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; border: 2px solid #3498db;">
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 15px; color: #2c3e50;">
+                        SERVERLESS FUNCTIONS (Netlify)
+                    </div>
+                    <div class="split-flow">
+                        <div class="flow-column">
+                            <div class="flow-box api" style="font-size: 13px;">
+                                searchDeals.js<br>
+                                - Parse request<br>
+                                - Validate input<br>
+                                - Call HubSpot API<br>
+                                - Return deals
+                            </div>
+                        </div>
+                        <div class="flow-column">
+                            <div class="flow-box api" style="font-size: 13px;">
+                                getLineItems.js<br>
+                                - Get associations<br>
+                                - Batch fetch items<br>
+                                - Return formatted data
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓ Bearer Token Auth</div>
+
+                <div style="background: #d4edda; padding: 20px; border-radius: 8px; border: 2px solid #27ae60;">
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 15px; color: #2c3e50;">
+                        HUBSPOT CRM API v3
+                    </div>
+                    <div class="flow-box" style="margin: 10px auto; max-width: 400px; background: #fff; border-color: #27ae60;">
+                        /crm/v3/objects/deals/search<br>
+                        /crm/v3/objects/deals/{id}<br>
+                        /crm/v3/objects/line_items/batch/read
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓ JSON Response</div>
+
+                <div class="flow-box end">Data Displayed to User</div>
+            </div>
+        </div>
+
+        <h2>7.1 Planned Future Architecture</h2>
+
+        <div class="diagram-container">
+            <div class="diagram-title">Future Implementation - Multi-Source Integration</div>
+            <div class="flowchart">
+                <div class="flow-box start">User Search Request</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Express.js Backend<br>(Enhanced Serverless Function)</div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="split-flow" style="margin: 20px 0;">
+                    <div class="flow-column">
+                        <div style="font-weight: bold; margin-bottom: 10px; color: #3498db;">HubSpot Path</div>
+                        <div class="flow-box api">HubSpot<br>CRM API</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box process" style="font-size: 12px;">Deal Data<br>+ Line Items</div>
+                    </div>
+
+                    <div class="flow-column">
+                        <div style="font-weight: bold; margin-bottom: 10px; color: #9b59b6;">Invoice Path</div>
+                        <div class="flow-box decision" style="font-size: 12px;">Check Google<br>Sheets Cache</div>
+                        <div class="flow-arrow">↓ Not Found</div>
+                        <div class="flow-box api">Sports Inc<br>API</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box process" style="font-size: 12px;">Save to<br>Cache</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box process" style="font-size: 12px;">EDI Invoice<br>Data</div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box process">Merge Data Responses</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box end">Display: Invoice (Left) | HubSpot (Right)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & Authentication -->
+    <div class="section" style="page-break-before: always;">
+        <h1>8. Security & Authentication</h1>
+
+        <h2>8.1 Environment Variables</h2>
+
+        <p>All sensitive credentials are stored securely in environment variables, never committed to version control.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Purpose</th>
+                    <th>Format</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>HUBSPOT_ACCESS_TOKEN</td>
+                    <td>HubSpot API authentication</td>
+                    <td>pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>SPORTSINC_API_KEY</td>
+                    <td>Sports Inc API authentication</td>
+                    <td>ryDLH84WROG3uawnkBhlB0bj3wdYKix5lBl1ArgbmvvJrRwtkF2gNvyS9rNesa8e4aSpvO9ctfvwyesIS1saeyQ9Tpg0zHCQCvnu</td>
+                    <td>Planned</td>
+                </tr>
+                <tr>
+                    <td>GOOGLE_SHEETS_ID</td>
+                    <td>Google Sheets document ID</td>
+                    <td>1H7AT9aFP8Z4izzHmZ0f-tOkXpPYC4tdgyWUQQE_jfNk</td>
+                    <td>Planned</td>
+                </tr>
+                <tr>
+                    <td>GOOGLE_SERVICE_ACCOUNT_EMAIL</td>
+                    <td>Google API service account</td>
+                    <td>service-account@project.iam.gserviceaccount.com</td>
+                    <td>Planned</td>
+                </tr>
+                <tr>
+                    <td>GOOGLE_PRIVATE_KEY</td>
+                    <td>Google API private key</td>
+                    <td>-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----</td>
+                    <td>Planned</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>8.2 Security Best Practices</h2>
+
+        <div class="info-box success">
+            <strong>Implemented Security Measures:</strong>
+            <ul>
+                <li><strong>API Token Isolation:</strong> All API keys stored server-side only</li>
+                <li><strong>CORS Configuration:</strong> Controlled cross-origin resource sharing</li>
+                <li><strong>HTTPS Only:</strong> All communications encrypted via Netlify CDN</li>
+                <li><strong>Input Validation:</strong> Query length and format validation</li>
+                <li><strong>Error Masking:</strong> Generic error messages to prevent information disclosure</li>
+                <li><strong>.env Gitignore:</strong> Local credentials never committed to repository</li>
+            </ul>
+        </div>
+
+        <h2>8.3 Authentication Flow</h2>
+
+        <div class="code-block">
+// Frontend (NO authentication credentials)
+fetch('/.netlify/functions/searchDeals', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query: 'SO-12345' })
+});
+
+// Backend Serverless Function (HAS authentication)
+const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
+
+axios.post('https://api.hubapi.com/crm/v3/objects/deals/search', data, {
+  headers: {
+    'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+    'Content-Type': 'application/json'
+  }
+});
+        </div>
+
+        <h2>8.4 Token Management</h2>
+
+        <h3>Local Development</h3>
+        <p>Create a <code>.env</code> file in the project root:</p>
+        <div class="code-block">
+HUBSPOT_ACCESS_TOKEN=pat-na1-your-token-here
+        </div>
+
+        <h3>Production Deployment</h3>
+        <ol>
+            <li>Navigate to Netlify Dashboard</li>
+            <li>Select your site</li>
+            <li>Go to <strong>Site settings > Build & deploy > Environment variables</strong></li>
+            <li>Add each environment variable with its value</li>
+            <li>Redeploy the site to apply changes</li>
+        </ol>
+
+        <div class="info-box warning">
+            <strong>Security Warning:</strong> Never log, display, or commit API tokens. Always use environment
+            variables and ensure .env is in .gitignore.
+        </div>
+    </div>
+
+    <!-- Deployment Strategy -->
+    <div class="section" style="page-break-before: always;">
+        <h1>9. Deployment Strategy</h1>
+
+        <h2>9.1 Netlify Configuration</h2>
+
+        <p>The project uses a <code>netlify.toml</code> configuration file:</p>
+
+        <div class="code-block">
+[build]
+  command = "npm install"
+  functions = "functions"
+  publish = "public"
+
+[dev]
+  command = "npm install && netlify dev"
+  functions = "functions"
+  publish = "public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+        </div>
+
+        <h3>Configuration Breakdown</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th>Value</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>build.command</td>
+                    <td>npm install</td>
+                    <td>Install axios dependency for serverless functions</td>
+                </tr>
+                <tr>
+                    <td>functions</td>
+                    <td>functions</td>
+                    <td>Directory containing serverless function code</td>
+                </tr>
+                <tr>
+                    <td>publish</td>
+                    <td>public</td>
+                    <td>Directory containing static files (index.html)</td>
+                </tr>
+                <tr>
+                    <td>redirects</td>
+                    <td>/* → /index.html</td>
+                    <td>SPA-style routing (status 200, not 301/302)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9.2 Deployment Commands</h2>
+
+        <h3>Local Development</h3>
+        <div class="code-block">
+# Install dependencies
+npm install
+
+# Start Netlify Dev server
+npm run dev
+
+# Application runs at http://localhost:8888
+# Functions available at /.netlify/functions/[function-name]
+        </div>
+
+        <h3>Preview Deployment</h3>
+        <div class="code-block">
+# Deploy to unique preview URL
+netlify deploy
+
+# Example output:
+# Deploy preview URL: https://5f9a3b2c1d4e5f6a7b8c9d0e--your-site.netlify.app
+        </div>
+
+        <h3>Production Deployment</h3>
+        <div class="code-block">
+# Deploy to production domain
+netlify deploy --prod
+
+# Example output:
+# Production URL: https://your-site.netlify.app
+        </div>
+
+        <h2>9.3 Deployment Verification Checklist</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>Verification Method</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1. Functions Deployed</td>
+                    <td>Netlify Dashboard > Functions tab</td>
+                    <td>searchDeals and getLineItems listed</td>
+                </tr>
+                <tr>
+                    <td>2. Environment Variables</td>
+                    <td>Netlify Dashboard > Site settings</td>
+                    <td>HUBSPOT_ACCESS_TOKEN configured</td>
+                </tr>
+                <tr>
+                    <td>3. Frontend Accessible</td>
+                    <td>Navigate to production URL</td>
+                    <td>Search interface loads</td>
+                </tr>
+                <tr>
+                    <td>4. Search Functionality</td>
+                    <td>Enter known Sales Order Number</td>
+                    <td>Deals displayed correctly</td>
+                </tr>
+                <tr>
+                    <td>5. Line Items</td>
+                    <td>Click "Show Line Items"</td>
+                    <td>Line items table expands</td>
+                </tr>
+                <tr>
+                    <td>6. Error Handling</td>
+                    <td>Enter invalid/non-existent SO number</td>
+                    <td>Graceful "No results" message</td>
+                </tr>
+                <tr>
+                    <td>7. Function Logs</td>
+                    <td>Netlify Dashboard > Functions > Logs</td>
+                    <td>No error logs, successful requests</td>
+                </tr>
+                <tr>
+                    <td>8. Browser Console</td>
+                    <td>F12 Developer Tools > Console</td>
+                    <td>No JavaScript errors</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9.4 Continuous Deployment</h2>
+
+        <p>Netlify supports automatic deployment from Git repositories:</p>
+
+        <ol>
+            <li>Connect your GitHub/GitLab/Bitbucket repository to Netlify</li>
+            <li>Configure build settings (already in netlify.toml)</li>
+            <li>Every push to main branch triggers automatic deployment</li>
+            <li>Pull requests create preview deployments</li>
+        </ol>
+
+        <div class="info-box">
+            <strong>Best Practice:</strong> Use Git-based deployment for production, manual deployment for testing
+            major changes.
+        </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="section" style="page-break-before: always;">
+        <h1>10. Technical Specifications</h1>
+
+        <h2>10.1 API Endpoint Specifications</h2>
+
+        <h3>searchDeals Function</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Endpoint</td>
+                    <td>POST /.netlify/functions/searchDeals</td>
+                </tr>
+                <tr>
+                    <td>Input Validation</td>
+                    <td>Query must be at least 2 characters</td>
+                </tr>
+                <tr>
+                    <td>HubSpot Search Property</td>
+                    <td>sales_order_ (exact match with EQ operator)</td>
+                </tr>
+                <tr>
+                    <td>Result Limit</td>
+                    <td>100 deals maximum</td>
+                </tr>
+                <tr>
+                    <td>Properties Returned</td>
+                    <td>All available deal properties</td>
+                </tr>
+                <tr>
+                    <td>Response Time</td>
+                    <td>~500-1500ms (depending on HubSpot API)</td>
+                </tr>
+                <tr>
+                    <td>Error Handling</td>
+                    <td>400 (invalid input), 500 (API errors)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>getLineItems Function</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Endpoint</td>
+                    <td>POST /.netlify/functions/getLineItems</td>
+                </tr>
+                <tr>
+                    <td>Input Validation</td>
+                    <td>dealId required (string)</td>
+                </tr>
+                <tr>
+                    <td>API Calls</td>
+                    <td>2 requests: associations + batch read</td>
+                </tr>
+                <tr>
+                    <td>Properties Fetched</td>
+                    <td>name, quantity, price, amount, description</td>
+                </tr>
+                <tr>
+                    <td>Empty Deals</td>
+                    <td>Returns empty array if no line items</td>
+                </tr>
+                <tr>
+                    <td>Response Time</td>
+                    <td>~800-2000ms (two API calls)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10.2 Frontend Specifications</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Implementation</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Search Debounce</td>
+                    <td>500ms delay</td>
+                    <td>Prevent excessive API calls during typing</td>
+                </tr>
+                <tr>
+                    <td>Layout</td>
+                    <td>CSS Grid</td>
+                    <td>Responsive deal card layout</td>
+                </tr>
+                <tr>
+                    <td>Loading States</td>
+                    <td>CSS animations</td>
+                    <td>Visual feedback during API calls</td>
+                </tr>
+                <tr>
+                    <td>Error Display</td>
+                    <td>Inline error messages</td>
+                    <td>User-friendly error communication</td>
+                </tr>
+                <tr>
+                    <td>Line Item Expansion</td>
+                    <td>Dynamic DOM insertion</td>
+                    <td>On-demand loading of detailed data</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10.3 HubSpot CRM API Details</h2>
+
+        <h3>API Version</h3>
+        <p>HubSpot CRM API v3 (Current stable version as of 2025)</p>
+
+        <h3>Base URL</h3>
+        <div class="code-block">
+https://api.hubapi.com
+        </div>
+
+        <h3>Authentication Method</h3>
+        <p>Bearer token (Private App access token)</p>
+
+        <h3>Endpoints Used</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Method</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>/crm/v3/objects/deals/search</td>
+                    <td>POST</td>
+                    <td>Search deals by property filters</td>
+                </tr>
+                <tr>
+                    <td>/crm/v3/objects/deals/{id}</td>
+                    <td>GET</td>
+                    <td>Get deal with associations (line_items)</td>
+                </tr>
+                <tr>
+                    <td>/crm/v3/objects/line_items/batch/read</td>
+                    <td>POST</td>
+                    <td>Batch fetch line item details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Required Scopes</h3>
+        <ul>
+            <li>crm.objects.deals.read</li>
+            <li>crm.objects.line_items.read</li>
+        </ul>
+
+        <h2>10.4 Performance Metrics</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Target</th>
+                    <th>Current</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Initial Page Load</td>
+                    <td>&lt; 1 second</td>
+                    <td>~500ms (static HTML)</td>
+                </tr>
+                <tr>
+                    <td>Search Response Time</td>
+                    <td>&lt; 2 seconds</td>
+                    <td>~1000-1500ms</td>
+                </tr>
+                <tr>
+                    <td>Line Items Load</td>
+                    <td>&lt; 3 seconds</td>
+                    <td>~1500-2000ms</td>
+                </tr>
+                <tr>
+                    <td>Uptime</td>
+                    <td>&gt; 99.9%</td>
+                    <td>Netlify SLA: 99.99%</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10.5 Browser Compatibility</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Browser</th>
+                    <th>Minimum Version</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Chrome</td>
+                    <td>90+</td>
+                    <td>Full support</td>
+                </tr>
+                <tr>
+                    <td>Firefox</td>
+                    <td>88+</td>
+                    <td>Full support</td>
+                </tr>
+                <tr>
+                    <td>Safari</td>
+                    <td>14+</td>
+                    <td>Full support</td>
+                </tr>
+                <tr>
+                    <td>Edge</td>
+                    <td>90+</td>
+                    <td>Full support (Chromium-based)</td>
+                </tr>
+                <tr>
+                    <td>Mobile Safari</td>
+                    <td>14+</td>
+                    <td>Responsive design</td>
+                </tr>
+                <tr>
+                    <td>Chrome Mobile</td>
+                    <td>90+</td>
+                    <td>Responsive design</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <strong>Dependencies:</strong> Modern browser with ES6+ support, Fetch API, and CSS Grid. No polyfills
+            required for target browsers.
+        </div>
+    </div>
+
+    <!-- Appendix -->
+    <div class="section" style="page-break-before: always;">
+        <h1>Appendix A: Development Commands Reference</h1>
+
+        <h2>Installation</h2>
+        <div class="code-block">
+# Install project dependencies
+npm install
+
+# Install Netlify CLI globally (if not already installed)
+npm install -g netlify-cli
+        </div>
+
+        <h2>Local Development</h2>
+        <div class="code-block">
+# Start development server
+npm run dev
+
+# Alternatively
+netlify dev
+
+# Access at: http://localhost:8888
+        </div>
+
+        <h2>Testing Serverless Functions</h2>
+        <div class="code-block">
+# Test searchDeals function
+curl -X POST http://localhost:8888/.netlify/functions/searchDeals \
+  -H "Content-Type: application/json" \
+  -d '{"query":"SO-12345"}'
+
+# Test getLineItems function
+curl -X POST http://localhost:8888/.netlify/functions/getLineItems \
+  -H "Content-Type: application/json" \
+  -d '{"dealId":"123456789"}'
+        </div>
+
+        <h2>Deployment</h2>
+        <div class="code-block">
+# Login to Netlify (first time only)
+netlify login
+
+# Deploy to preview
+netlify deploy
+
+# Deploy to production
+netlify deploy --prod
+        </div>
+
+        <h2>Debugging</h2>
+        <div class="code-block">
+# View function logs locally
+netlify dev --debug
+
+# View production logs
+netlify functions:log searchDeals
+netlify functions:log getLineItems
+        </div>
+    </div>
+
+    <div class="section">
+        <h1>Appendix B: Troubleshooting Guide</h1>
+
+        <h3>Issue: "HubSpot API token not configured"</h3>
+        <p><strong>Solution:</strong> Ensure HUBSPOT_ACCESS_TOKEN is set in .env file locally or in Netlify environment variables for production.</p>
+
+        <h3>Issue: No search results returned</h3>
+        <p><strong>Possible causes:</strong></p>
+        <ul>
+            <li>Sales Order Number doesn't exist in HubSpot</li>
+            <li>Property name mismatch (ensure it's sales_order_ with underscore)</li>
+            <li>Token doesn't have read permissions for deals</li>
+        </ul>
+
+        <h3>Issue: Line items not displaying</h3>
+        <p><strong>Possible causes:</strong></p>
+        <ul>
+            <li>Deal has no associated line items</li>
+            <li>Token doesn't have read permissions for line items</li>
+            <li>Association property name format issue (line_items vs 'line items')</li>
+        </ul>
+
+        <h3>Issue: CORS errors in browser console</h3>
+        <p><strong>Solution:</strong> Ensure serverless functions include proper CORS headers (already implemented in both functions).</p>
+
+        <h3>Issue: Function timeout</h3>
+        <p><strong>Solution:</strong> Netlify functions have 10-second timeout by default. If HubSpot API is slow, consider implementing caching.</p>
+    </div>
+
+    <div class="section">
+        <h1>Appendix C: Future Roadmap</h1>
+
+        <h2>Phase 1: Current Implementation (Complete)</h2>
+        <ul>
+            <li>HubSpot CRM integration</li>
+            <li>Sales Order Number search</li>
+            <li>Deal and line item display</li>
+            <li>Netlify serverless deployment</li>
+        </ul>
+
+        <h2>Phase 2: Sports Inc Integration (Planned)</h2>
+        <ul>
+            <li>Sports Inc API integration for EDI invoice data</li>
+            <li>Google Sheets caching layer</li>
+            <li>Two-column layout (Invoice | HubSpot)</li>
+            <li>Cache hit/miss logging</li>
+        </ul>
+
+        <h2>Phase 3: Enhanced Features (Planned)</h2>
+        <ul>
+            <li>Editable HubSpot fields (decoration type, deal stage)</li>
+            <li>Update API endpoints</li>
+            <li>Real-time sync indicators</li>
+            <li>Advanced search filters</li>
+        </ul>
+
+        <h2>Phase 4: Optimization (Planned)</h2>
+        <ul>
+            <li>Performance monitoring</li>
+            <li>Advanced error tracking</li>
+            <li>User analytics</li>
+            <li>Automated testing suite</li>
+        </ul>
+    </div>
+
+    <div class="section" style="page-break-before: always; text-align: center; padding-top: 100px;">
+        <h1>Document Information</h1>
+
+        <table style="margin: 40px auto; max-width: 600px;">
+            <tr>
+                <td style="font-weight: bold;">Document Title:</td>
+                <td>SportsPlus SI Tool Integration - Technical Documentation</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Version:</td>
+                <td>2.0.0</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Date Created:</td>
+                <td>December 2025</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Status:</td>
+                <td>Current Implementation + Planned Features</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Platform:</td>
+                <td>Netlify</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Primary Integration:</td>
+                <td>HubSpot CRM API v3</td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 60px; color: #7f8c8d;">
+            <p>For questions or support, please refer to:</p>
+            <ul style="list-style: none; padding: 0;">
+                <li>Netlify Documentation: https://docs.netlify.com</li>
+                <li>HubSpot API Documentation: https://developers.hubspot.com</li>
+                <li>Project Repository: [Your Git Repository URL]</li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>

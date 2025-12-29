@@ -1,0 +1,14 @@
+[build]
+  command = "npm install"
+  functions = "functions"
+  publish = "public"
+
+[dev]
+  command = "npm install && netlify dev"
+  functions = "functions"
+  publish = "public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

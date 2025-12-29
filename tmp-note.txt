@@ -1,0 +1,1 @@
+Applied header expansion & padding fix planned; proceeding with precise replacements.

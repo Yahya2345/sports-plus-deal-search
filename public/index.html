@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Plus - Deal Search with Invoice Data</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      animation: slideDown 0.6s ease-out;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2d3e50;
+    }
+
+    .logo span {
+      color: #ff6b35;
+    }
+
+    main {
+      flex: 1;
+      padding: 60px 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .search-container {
+      text-align: center;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    h1 {
+      color: white;
+      font-size: 42px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      color: #ff6b35;
+      font-size: 18px;
+      margin-bottom: 40px;
+      font-weight: 500;
+    }
+
+    .search-box {
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto 50px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #ff6b35;
+      font-size: 22px;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 18px 20px 18px 60px;
+      font-size: 18px;
+      border: 3px solid #ff6b35;
+      border-radius: 50px;
+      outline: none;
+      background: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 107, 53, 0.2);
+    }
+
+    #searchInput:focus {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+    }
+
+    #searchInput::placeholder {
+      color: #999;
+    }
+
+    #results {
+      margin-top: 30px;
+    }
+
+    /* Single Centered Layout */
+    .result-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: cardFadeIn 0.5s ease-out;
+    }
+
+    .main-box {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      border-top: 5px solid #ff6b35;
+    }
+
+    /* Section Headers */
+    .section-header {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2d3e50;
+      margin: 30px 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ff6b35;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-header:first-child {
+      margin-top: 0;
+    }
+
+    /* Invoice Cards */
+    .invoice-card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #4caf50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .invoice-card:hover {
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .invoice-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .invoice-vendor {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3e50;
+    }
+
+    .invoice-doc-number {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .invoice-summary {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .invoice-detail {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .invoice-card.expanded .invoice-detail {
+      display: block;
+    }
+
+    .expand-icon {
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      padding: 8px;
+      user-select: none;
+    }
+
+    .expand-icon:hover {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+    }
+
+    .invoice-card.expanded .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    /* HubSpot Data Styles */
+    .deal-card {
+      margin-bottom: 25px;
+      padding-bottom: 25px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .deal-card:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .deal-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2d3e50;
+      margin-bottom: 8px;
+    }
+
+    .deal-amount {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff6b35;
+      margin-bottom: 15px;
+    }
+
+    .deal-info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .info-label {
+      color: #666;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .info-value {
+      color: #2d3e50;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .stage-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    /* Line Items */
+    .line-items-section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .line-items-header {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .line-items-header::before {
+      content: '📦';
+      font-size: 18px;
+    }
+
+    .line-item {
+      background: white;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border-left: 3px solid #ff6b35;
+    }
+
+    .line-item-name {
+      font-weight: 600;
+      color: #2d3e50;
+      margin-bottom: 5px;
+    }
+
+    .line-item-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #666;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .line-item-detail {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .no-line-items {
+      color: #999;
+      font-style: italic;
+      font-size: 14px;
+      text-align: center;
+      padding: 15px;
+    }
+
+    /* Editable controls */
+    .edit-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .edit-row label {
+      font-size: 12px;
+      color: #2d3e50;
+      font-weight: 600;
+    }
+
+    .edit-row input[type="date"] {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .line-items-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .save-lineitems-btn {
+      background: #ff6b35;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .save-lineitems-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .save-status {
+      font-size: 12px;
+      color: #2d3e50;
+    }
+
+    /* All Properties Section */
+    .all-properties-section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff3cd;
+      border-radius: 8px;
+      border: 2px solid #ffc107;
+    }
+
+    .all-properties-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Loading & Error States */
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 20px;
+      padding: 40px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .loading-inline {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      padding: 15px;
+      font-style: italic;
+    }
+
+    .no-results {
+      text-align: center;
+      color: white;
+      font-size: 20px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    .error {
+      text-align: center;
+      color: #ff6b35;
+      font-size: 16px;
+      padding: 30px;
+      background: rgba(255, 107, 53, 0.1);
+      border-radius: 15px;
+      border: 2px solid #ff6b35;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(26, 35, 50, 0.95);
+      color: white;
+      padding: 40px 20px 20px;
+      margin-top: 60px;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .footer-section h3 {
+      color: #ff6b35;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .footer-section p, .footer-section a {
+      color: #ccc;
+      text-decoration: none;
+      line-height: 1.8;
+      transition: color 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      color: #ff6b35;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #999;
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* Deal Properties Grid */
+    .deal-properties-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .property-item {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 3px solid #ff6b35;
+    }
+
+    .property-label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .property-value {
+      font-size: 14px;
+      color: #2d3e50;
+      font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .main-box {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .deal-properties-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Sports <span>Plus</span></div>
+  </header>
+
+  <main>
+    <div class="search-container">
+      <h1>Deal Search Portal</h1>
+      <p class="subtitle">Search by Sales Order Number - Invoice Data</p>
+
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Enter Sales Order Number (PO Number)..."
+          autocomplete="off"
+        >
+      </div>
+
+      <div id="results"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Sports Plus</h3>
+        <p>Your neighbors dedicated to crafting high-quality custom apparel right here in our shop.</p>
+      </div>
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <p>4429 Brookfield Corp. Dr<br>
+        Suite 100<br>
+        Chantilly, VA 20151<br>
+        <a href="tel:7032228255">703-222-8255</a></p>
+      </div>
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <p>
+          <a href="https://www.sportsplusteam.com/team-uniforms">Team Uniforms</a><br>
+          <a href="https://www.sportsplusteam.com/custom-spiritwear">Custom Spiritwear</a><br>
+          <a href="https://www.sportsplusteam.com/premium-sports-equipment">Premium Equipment</a><br>
+          <a href="https://www.sportsplusteam.com/contact">Contact Us</a>
+        </p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Sports Plus, Inc. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const resultsDiv = document.getElementById('results');
+
+    let searchTimeout;
+
+    // Unified search via backend
+    async function unifiedSearch(query) {
+      console.log('🔍 Starting unified search for:', query);
+
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Search results:', data);
+      return data;
+    }
+
+    // Get line items for a deal
+    async function getLineItems(dealId) {
+      console.log('Fetching line items for deal:', dealId);
+
+      try {
+        const response = await fetch('/api/hubspot/lineItems', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ dealId })
+        });
+
+        if (!response.ok) {
+          console.error('Error fetching line items');
+          return [];
+        }
+
+        const data = await response.json();
+        return data.lineItems || [];
+      } catch (error) {
+        console.error('Error in getLineItems:', error);
+        return [];
+      }
+    }
+
+    function formatCurrency(amount) {
+      if (!amount && amount !== 0) return 'N/A';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function toDateInputValue(val) {
+      if (val === null || val === undefined || val === '') return '';
+      if (typeof val === 'number') {
+        try { return new Date(val).toISOString().slice(0, 10); } catch { return ''; }
+      }
+      if (typeof val === 'string') {
+        // numeric string
+        if (/^\d+$/.test(val)) {
+          try { return new Date(Number(val)).toISOString().slice(0, 10); } catch { return ''; }
+        }
+        // ISO or YYYY-MM-DD
+        try { return new Date(val).toISOString().slice(0, 10); } catch { return ''; }
+      }
+      return '';
+    }
+
+    function formatPropertyName(propName) {
+      return propName
+        .replace(/_/g, ' ')
+        .replace(/hs /g, '')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
+    function renderInvoiceData(invoice) {
+      if (!invoice) {
+        return `
+          <div class="invoice-not-found">
+            📋 No invoice data found in Sports Inc Tool
+          </div>
+        `;
+      }
+
+      // Exclude raw arrays and selected fields from simple key/value render
+      const excludeKeys = [
+        '_source',
+        '_lineItems',
+        // Requested hidden fields
+        'Is Credit',
+        'Terms Of Payment',
+        'Terms Of Delivery',
+        'Carrier'
+      ];
+      const invoiceItems = Object.entries(invoice)
+        .filter(([key]) => !excludeKeys.includes(key))
+        .map(([key, value]) => {
+          let displayValue = value;
+
+          if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('total')) {
+            displayValue = formatCurrency(value);
+          } else if (key.toLowerCase().includes('date')) {
+            displayValue = formatDate(value);
+          }
+
+          return `
+            <div class="invoice-item">
+              <span class="invoice-label">${formatPropertyName(key)}</span>
+              <span class="invoice-value">${displayValue || 'N/A'}</span>
+            </div>
+          `;
+        })
+        .join('');
+
+      const sourceText = invoice._source === 'cache'
+        ? '✓ Loaded from Cache (Google Sheets)'
+        : '✓ Fetched from Sports Inc API (Cached for future)';
+
+      // Render SI line items under invoice when available
+      const siLineItemsSection = `
+        <div class="line-items-section">
+          <div class="line-items-header">Line Items</div>
+          ${renderSiLineItems(invoice._lineItems)}
+        </div>
+      `;
+
+      return `
+        ${invoiceItems}
+        ${siLineItemsSection}
+        <div class="invoice-source">${sourceText}</div>
+      `;
+    }
+
+    function renderInvoiceDetails(invoice) {
+      const excludeKeys = ['_source', '_lineItems', '_pdfUrl', 'Line Items Count', 'Is Credit', 'Terms Of Payment', 'Terms Of Delivery', 'Carrier'];
+      
+      const detailsHTML = Object.entries(invoice)
+        .filter(([key]) => !excludeKeys.includes(key))
+        .map(([key, value]) => {
+          let displayValue = value;
+          if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('total')) {
+            displayValue = formatCurrency(value);
+          } else if (key.toLowerCase().includes('date')) {
+            displayValue = formatDate(value);
+          }
+
+          return `
+            <div class="property-item">
+              <div class="property-label">${formatPropertyName(key)}</div>
+              <div class="property-value">${displayValue || 'N/A'}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      return `<div class="deal-properties-grid">${detailsHTML}</div>`;
+    }
+
+    function renderInvoiceLineItems(invoice, invoiceId) {
+      if (!invoice._lineItems || invoice._lineItems.length === 0) {
+        return '<div class="no-line-items">No line items found</div>';
+      }
+
+      const vendorName = invoice.Supplier || 'Unknown Vendor';
+      const supplierDoc = invoice['Supplier Doc Number'] || 'N/A';
+
+      const itemsHTML = invoice._lineItems.map((li, idx) => {
+        const name = li.description || li.supplierItemNumber || 'Unnamed Item';
+        const qty = li.quantityShipped ?? li.quantityOrdered ?? 'N/A';
+        const price = li.netPrice ?? li.listPrice ?? 0;
+        const total = li.extension ?? (price && qty ? price * qty : 0);
+        const upc = li.upc ? `<div class="line-item-detail"><strong>UPC:</strong> ${li.upc}</div>` : '';
+        const size = li.size ? `<div class="line-item-detail"><strong>Size:</strong> ${li.size}</div>` : '';
+        const color = li.color ? `<div class="line-item-detail"><strong>Color:</strong> ${li.color}</div>` : '';
+        const lineItemId = `${invoiceId}-li-${idx}`;
+
+        return `
+          <div class="line-item">
+            <div class="line-item-name">${name}</div>
+            <div class="line-item-details">
+              <div class="line-item-detail"><strong>Vendor:</strong> ${vendorName}</div>
+              <div class="line-item-detail"><strong>Supplier Doc #:</strong> ${supplierDoc}</div>
+              <div class="line-item-detail"><strong>Qty:</strong> ${qty}</div>
+              <div class="line-item-detail"><strong>Price:</strong> ${formatCurrency(price)}</div>
+              <div class="line-item-detail"><strong>Total:</strong> ${formatCurrency(total)}</div>
+              ${upc}
+              ${size}
+              ${color}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `<div class="line-items-section"><div class="line-items-header">Line Items</div>${itemsHTML}</div>`;
+    }
+
+    function renderInvoiceData(invoice) {
+      if (!invoice) {
+        return `
+          <div class="invoice-not-found">
+            📋 No invoice data found in Sports Inc Tool
+          </div>
+        `;
+      }
+
+      // Exclude raw arrays and selected fields from simple key/value render
+      const excludeKeys = [
+        '_source',
+        '_lineItems',
+        // Requested hidden fields
+        'Is Credit',
+        'Terms Of Payment',
+        'Terms Of Delivery',
+        'Carrier'
+      ];
+      const invoiceItems = Object.entries(invoice)
+        .filter(([key]) => !excludeKeys.includes(key))
+        .map(([key, value]) => {
+          let displayValue = value;
+
+          if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('total')) {
+            displayValue = formatCurrency(value);
+          } else if (key.toLowerCase().includes('date')) {
+            displayValue = formatDate(value);
+          }
+
+          return `
+            <div class="invoice-item">
+              <span class="invoice-label">${formatPropertyName(key)}</span>
+              <span class="invoice-value">${displayValue || 'N/A'}</span>
+            </div>
+          `;
+        })
+        .join('');
+
+      const sourceText = invoice._source === 'cache'
+        ? '✓ Loaded from Cache (Google Sheets)'
+        : '✓ Fetched from Sports Inc API (Cached for future)';
+
+      // Render SI line items under invoice when available
+      const siLineItemsSection = `
+        <div class="line-items-section">
+          <div class="line-items-header">Line Items</div>
+          ${renderSiLineItems(invoice._lineItems)}
+        </div>
+      `;
+
+      return `
+        ${invoiceItems}
+        ${siLineItemsSection}
+        <div class="invoice-source">${sourceText}</div>
+      `;
+    }
+
+    function renderAllProperties(props) {
+      const excludedProps = [
+        'dealname', 'amount', 'closedate', 'pipeline', 'dealstage', 'sales_order_',
+        'createdate', 'lastmodifieddate', 'hs_object_id', 'hs_lastmodifieddate',
+        'hs_createdate', 'hubspot_owner_id', 'hs_object_source', 'hs_object_source_id',
+        'hs_object_source_label', 'hs_is_closed', 'hs_is_closed_won'
+      ];
+
+      return Object.entries(props)
+        .filter(([key]) => {
+          const keyLower = key.toLowerCase();
+          return !excludedProps.includes(key) &&
+                 props[key] !== null &&
+                 props[key] !== '' &&
+                 !keyLower.includes('object_id') &&
+                 !keyLower.includes('objectid');
+        })
+        .sort(([keyA], [keyB]) => {
+          if (keyA === 'hs_num_of_associated_line_items') return -1;
+          if (keyB === 'hs_num_of_associated_line_items') return 1;
+          return keyA.localeCompare(keyB);
+        })
+        .map(([key, value]) => {
+          const displayValue = key.includes('date') && value ? formatDate(value) : (value || 'N/A');
+          const isLineItemCount = key === 'hs_num_of_associated_line_items';
+
+          return `
+            <div class="info-row" style="${isLineItemCount ? 'background: #fff3cd; padding: 10px; border-radius: 6px;' : ''}">
+              <span class="info-label">${formatPropertyName(key)}:</span>
+              <span class="info-value" style="${isLineItemCount ? 'font-weight: bold; color: #ff6b35;' : ''}">${displayValue}</span>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function renderLineItems(lineItems) {
+      if (!lineItems || lineItems.length === 0) {
+        return '<div class="no-line-items">No line items found</div>';
+      }
+
+      return lineItems.map(item => {
+        const props = item.properties;
+        return `
+          <div class="line-item">
+            <div class="line-item-name">${props.name || props.description || 'Unnamed Item'}</div>
+            <div class="line-item-details">
+              <div class="line-item-detail">
+                <strong>Qty:</strong> ${props.quantity || 'N/A'}
+              </div>
+              <div class="line-item-detail">
+                <strong>Price:</strong> ${formatCurrency(props.price)}
+              </div>
+              <div class="line-item-detail">
+                <strong>Total:</strong> ${formatCurrency(props.amount)}
+              </div>
+            </div>
+            <div class="edit-row">
+              <label for="asd-${item.id}">Actual Shipping Date</label>
+              <input
+                type="date"
+                id="asd-${item.id}"
+                class="asd-input"
+                data-line-item-id="${item.id}"
+                data-prop="actual_shipping_date"
+                value="${toDateInputValue(props.actual_shipping_date)}"
+              />
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Sports Inc line items (from invoice._lineItems) with editable fields
+    function renderSiLineItems(lineItems, invoice) {
+      if (!lineItems || lineItems.length === 0) {
+        return '<div class="no-line-items">No line items found</div>';
+      }
+
+      return lineItems.map((li, idx) => {
+        const name = li.description || li.supplierItemNumber || 'Unnamed Item';
+        const qty = li.quantityShipped ?? li.quantityOrdered ?? 'N/A';
+        const price = li.netPrice ?? li.listPrice ?? 0;
+        const total = li.extension ?? (price && qty ? price * qty : 0);
+        const upc = li.upc ? `<div class="line-item-detail"><strong>UPC:</strong> ${li.upc}</div>` : '';
+        const size = li.size ? `<div class="line-item-detail"><strong>Size:</strong> ${li.size}</div>` : '';
+        const color = li.color ? `<div class="line-item-detail"><strong>Color:</strong> ${li.color}</div>` : '';
+
+        const liId = `li-${invoice['SI Doc Number']}-${idx + 1}`;
+
+        return `
+          <div class="line-item" data-li-id="${liId}">
+            <div class="line-item-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px;">
+              <div>
+                <div class="line-item-name" style="font-weight: bold; color: #333;">${name}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                  Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)}
+                </div>
+              </div>
+              <span class="line-item-toggle" style="font-size: 18px; transition: transform 0.3s;">▼</span>
+            </div>
+            
+            <div class="line-item-content" style="display: none;">
+              <div class="line-item-details" style="margin-bottom: 15px;">
+                <div class="line-item-detail"><strong>Qty:</strong> ${qty}</div>
+                <div class="line-item-detail"><strong>Price:</strong> ${formatCurrency(price)}</div>
+                <div class="line-item-detail"><strong>Total:</strong> ${formatCurrency(total)}</div>
+                ${upc}
+                ${size}
+                ${color}
+              </div>
+            
+              <div class="editable-fields" style="margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 6px;">
+              <div style="font-weight: bold; margin-bottom: 10px; color: #ff6b35;">Inspection & Tracking</div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                <div>
+                  <label style="font-size: 12px; color: #666;">Actual Shipping Date</label>
+                  <input type="date" class="editable-field" data-field="Actual Shipping Date" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"/>
+                </div>
+                
+                <div>
+                  <label style="font-size: 12px; color: #666;">Inspector</label>
+                  <select class="editable-field" data-field="Inspector" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Select --</option>
+                    <option value="JJ">JJ</option>
+                    <option value="SS">SS</option>
+                    <option value="May">May</option>
+                    <option value="Corey">Corey</option>
+                    <option value="Sam">Sam</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                <div>
+                  <label style="font-size: 12px; color: #666;">Inspection Status</label>
+                  <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Select --</option>
+                    <option value="Complete">Complete</option>
+                    <option value="Incomplete">Incomplete</option>
+                    <option value="Defective">Defective</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label style="font-size: 12px; color: #666;">Moved to Other Shelf</label>
+                  <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div style="margin-bottom: 10px;">
+                <label style="font-size: 12px; color: #666;">Inspection Notes</label>
+                <textarea class="editable-field" data-field="Inspection Notes" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; font-family: inherit;"></textarea>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                  <label style="font-size: 12px; color: #666;">Shelf Location</label>
+                  <input type="text" class="editable-field" data-field="Shelf Location" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"/>
+                </div>
+                
+                <div>
+                  <label style="font-size: 12px; color: #666;">New Shelf Location</label>
+                  <input type="text" class="editable-field" data-field="New Shelf Location" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"/>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function displayResults(searchData) {
+      const { invoices, deals } = searchData;
+
+      if ((!invoices || invoices.length === 0) && (!deals || deals.length === 0)) {
+        resultsDiv.innerHTML = '<div class="no-results">No data found matching your search.</div>';
+        return;
+      }
+
+      let contentHTML = '<div class="result-container"><div class="main-box">';
+
+      // HubSpot Deals Section - TEMPORARILY HIDDEN
+      // Uncomment this section when HubSpot configuration is complete
+      /*
+      if (deals && deals.length > 0) {
+        contentHTML += '<div class="section-header">🏢 HubSpot Deals</div>';
+        
+        for (const deal of deals) {
+          const props = deal.properties;
+          contentHTML += `
+            <div class="deal-card">
+              <div class="deal-name">${props.dealname || 'Unnamed Deal'}</div>
+              <div class="deal-amount">${formatCurrency(props.amount)}</div>
+              <div class="deal-properties-grid">
+                <div class="property-item">
+                  <div class="property-label">Sales Order #</div>
+                  <div class="property-value">${props.sales_order_ || 'N/A'}</div>
+                </div>
+                <div class="property-item">
+                  <div class="property-label">Close Date</div>
+                  <div class="property-value">${formatDate(props.closedate)}</div>
+                </div>
+                <div class="property-item">
+                  <div class="property-label">Pipeline</div>
+                  <div class="property-value">${props.pipeline || 'N/A'}</div>
+                </div>
+                <div class="property-item">
+                  <div class="property-label">Deal Stage</div>
+                  <div class="property-value"><span class="stage-badge">${props.dealstage || 'N/A'}</span></div>
+                </div>
+              </div>
+              <div class="line-items-section" id="line-items-${deal.id}">
+                <div class="line-items-header">Line Items</div>
+                <div class="loading-inline">Loading line items...</div>
+              </div>
+            </div>
+          `;
+        }
+      }
+      */
+
+      // Invoices Section
+      if (invoices && invoices.length > 0) {
+        contentHTML += `
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div>📋 Sports Inc Invoices</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="save-all-invoices-btn" style="padding: 8px 14px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Save All Changes</button>
+              <span id="save-all-status" style="font-size: 12px; color: #555;"></span>
+            </div>
+          </div>`;
+        
+        invoices.forEach((invoice, idx) => {
+          const invoiceId = `invoice-${idx}`;
+          const hasRealLineItems = invoice._lineItems && invoice._lineItems.length > 0 && 
+                                   !invoice._lineItems[0]?.description?.includes('SEE VENDOR INVOICE');
+          
+          const statusBadge = invoice.Status === 'Active' 
+            ? '<span style="background: #4CAF50; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px;">✓ ACTIVE</span>'
+            : '<span style="background: #9E9E9E; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px;">📜 HISTORICAL</span>';
+          
+          contentHTML += `
+            <div class="invoice-card" data-invoice-id="${invoiceId}">
+              <div class="invoice-card-header">
+                <div>
+                  <div class="invoice-vendor">📦 ${invoice.Supplier || 'Unknown Vendor'} ${statusBadge}</div>
+                  <div class="invoice-doc-number">SI Doc #${invoice['SI Doc Number']} | Supplier Doc #${invoice['Supplier Doc Number']}</div>
+                </div>
+                <span class="expand-icon">▼</span>
+              </div>
+              <div class="invoice-summary">
+                <div><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</div>
+                <div><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</div>
+                <div><strong>Line Items:</strong> ${invoice['Line Items Count']}</div>
+              </div>
+              <div class="invoice-detail">
+                ${hasRealLineItems ? renderSiLineItems(invoice._lineItems, invoice) : '<div class="no-line-items">Line items not available (scanned document)</div>'}
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        contentHTML += '<div class="section-header">📋 Sports Inc Invoices</div>';
+        contentHTML += '<div class="no-results">No invoices found in Sports Inc Tool</div>';
+      }
+
+      contentHTML += '</div></div>';
+      resultsDiv.innerHTML = contentHTML;
+
+      // Attach click handlers for expandable invoice cards
+      document.querySelectorAll('.invoice-card').forEach(card => {
+        const expandIcon = card.querySelector('.expand-icon');
+        
+        // Click on card: expand if not expanded
+        card.addEventListener('click', (e) => {
+          // Don't handle if clicking on actions or inputs
+          if (e.target.closest('.line-items-actions') || e.target.closest('input')) {
+            return;
+          }
+          
+          // If clicking the expand icon, let its handler deal with it
+          if (e.target.closest('.expand-icon')) {
+            return;
+          }
+          
+          // Expand card if not already expanded
+          if (!card.classList.contains('expanded')) {
+            card.classList.add('expanded');
+          }
+        });
+        
+        // Click on expand icon: toggle expanded state
+        if (expandIcon) {
+          expandIcon.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card click handler
+            card.classList.toggle('expanded');
+          });
+        }
+      });
+
+      // Attach click handlers for collapsible line items
+      document.querySelectorAll('.line-item-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent invoice card toggle
+          const lineItem = header.closest('.line-item');
+          const content = lineItem.querySelector('.line-item-content');
+          const toggle = header.querySelector('.line-item-toggle');
+          
+          if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            toggle.style.transform = 'rotate(180deg)';
+          } else {
+            content.style.display = 'none';
+            toggle.style.transform = 'rotate(0deg)';
+          }
+        });
+      });
+
+      // Fetch HubSpot line items for each deal - TEMPORARILY DISABLED
+      // Uncomment when HubSpot configuration is complete
+      /*
+      if (deals && deals.length > 0) {
+        for (const deal of deals) {
+          try {
+            const lineItems = await getLineItems(deal.id);
+            const lineItemsContainer = document.getElementById(`line-items-${deal.id}`);
+            if (lineItemsContainer) {
+              lineItemsContainer.innerHTML = `
+                <div class="line-items-header">Line Items</div>
+                ${renderLineItems(lineItems)}
+                <div class="line-items-actions">
+                  <button class="save-lineitems-btn" data-deal-id="${deal.id}">Save Shipping Dates</button>
+                  <span class="save-status" id="save-status-${deal.id}"></span>
+                </div>
+              `;
+              const btn = lineItemsContainer.querySelector('.save-lineitems-btn');
+              btn?.addEventListener('click', async () => {
+                await saveShippingDatesForDeal(deal.id);
+              });
+            }
+          } catch (error) {
+            console.error(`Error loading line items for deal ${deal.id}:`, error);
+            const lineItemsContainer = document.getElementById(`line-items-${deal.id}`);
+            if (lineItemsContainer) {
+              lineItemsContainer.innerHTML = `
+                <div class="line-items-header">Line Items</div>
+                <div class="no-line-items">Error loading line items</div>
+              `;
+            }
+          }
+        }
+      }
+      */
+    }
+
+    async function saveShippingDatesForDeal(dealId) {
+      const container = document.getElementById(`line-items-${dealId}`);
+      const statusEl = document.getElementById(`save-status-${dealId}`);
+      const btn = container.querySelector('.save-lineitems-btn');
+      const inputs = container.querySelectorAll('input.asd-input');
+      const updates = Array.from(inputs).map(input => ({
+        id: input.getAttribute('data-line-item-id'),
+        actual_shipping_date: input.value || null
+      }));
+
+      statusEl.textContent = 'Saving...';
+      btn.disabled = true;
+      try {
+        const resp = await fetch('/api/hubspot/lineItems/batchUpdate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updates })
+        });
+        if (!resp.ok) throw new Error(`Save failed (${resp.status})`);
+        statusEl.textContent = '✓ Saved';
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+      } catch (e) {
+        console.error('Save error:', e);
+        statusEl.textContent = '⚠️ Save failed';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Handle global save-all (all invoices)
+    resultsDiv.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('save-all-invoices-btn')) return;
+
+      const statusEl = document.getElementById('save-all-status');
+      const fields = resultsDiv.querySelectorAll('.editable-field');
+      const grouped = new Map(); // key: po|si -> { poNumber, siDocNumber, updates: [{lineItemIndex, updates}] }
+
+      fields.forEach(field => {
+        const poNumber = field.dataset.po;
+        const siDocNumber = field.dataset.siDoc;
+        const liIdx = field.dataset.liIdx;
+        const fieldName = field.dataset.field;
+        const val = field.value;
+        if (!poNumber || !siDocNumber || !liIdx || !fieldName || val === '') return;
+
+        const key = `${poNumber}|${siDocNumber}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, { poNumber, siDocNumber, updatesMap: new Map() });
+        }
+        const bucket = grouped.get(key);
+        if (!bucket.updatesMap.has(liIdx)) bucket.updatesMap.set(liIdx, { lineItemIndex: Number(liIdx), updates: {} });
+        bucket.updatesMap.get(liIdx).updates[fieldName] = val;
+      });
+
+      // Build payloads
+      const payloads = Array.from(grouped.values()).map(g => ({
+        poNumber: g.poNumber,
+        siDocNumber: g.siDocNumber,
+        updates: Array.from(g.updatesMap.values()).filter(u => Object.keys(u.updates).length > 0)
+      })).filter(p => p.updates.length > 0);
+
+      if (payloads.length === 0) {
+        if (statusEl) statusEl.textContent = '⚠️ No changes to save';
+        return;
+      }
+
+      if (statusEl) statusEl.textContent = '💾 Saving...';
+      const btn = e.target;
+      btn.disabled = true;
+
+      try {
+        for (const p of payloads) {
+          const resp = await fetch('/api/updateLineItemsBulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p)
+          });
+          if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.error || `Save failed (${resp.status})`);
+          }
+        }
+        if (statusEl) statusEl.textContent = '✅ Saved';
+        setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+      } catch (err) {
+        console.error('Save-all error:', err);
+        if (statusEl) statusEl.textContent = `⚠️ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    searchInput.addEventListener('input', async (e) => {
+      const query = e.target.value.trim();
+
+      clearTimeout(searchTimeout);
+
+      if (query.length < 2) {
+        resultsDiv.innerHTML = '';
+        return;
+      }
+
+      resultsDiv.innerHTML = '<div class="loading">🔍 Searching invoice data and deals...</div>';
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const searchData = await unifiedSearch(query);
+          await displayResults(searchData);
+        } catch (error) {
+          console.error('Search error:', error);
+          resultsDiv.innerHTML = `
+            <div class="error">
+              ⚠️ <strong>Error:</strong> ${error.message}
+              <p style="margin-top: 10px; font-size: 14px;">
+                Please check your API configuration.
+              </p>
+            </div>
+          `;
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>
