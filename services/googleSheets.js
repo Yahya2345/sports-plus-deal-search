@@ -6,10 +6,28 @@ const SHEET_NAME = 'Invoice Data'; // Main sheet for storing invoice and line it
 
 // Initialize Google Sheets API
 const getGoogleSheetsClient = () => {
+  let privateKey = process.env.GOOGLE_PRIVATE_KEY || '';
+  
+  // Remove quotes if present
+  privateKey = privateKey.replace(/^["']|["']$/g, '');
+  
+  // Handle escaped \n
+  if (privateKey.includes('\\n')) {
+    privateKey = privateKey.replace(/\\n/g, '\n');
+  }
+  // Handle space-separated format (Netlify issue)
+  else if (!privateKey.includes('\n') && privateKey.includes(' ')) {
+    // Split by spaces and rejoin with newlines, keeping header/footer intact
+    privateKey = privateKey
+      .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
+      .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
+      .replace(/(.{64})\s+/g, '$1\n'); // Add newline every 64 chars
+  }
+  
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: privateKey,
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
