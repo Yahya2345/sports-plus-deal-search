@@ -161,8 +161,9 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
       const status = item['Inspection Status'] || 'N/A';
       const inspector = item['Inspector'] || 'Unknown';
       const qty = item['Quantity Shipped'] || '0';
+      const asd = item['Actual Shipping Date'] || 'Not set';
       const notes = item['Inspection Notes'] || 'No notes';
-      return `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Line ${idx + 1}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${desc}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${status}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${qty}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${inspector}</td></tr>`;
+      return `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Line ${idx + 1}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${desc}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${status}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${qty}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${asd}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${inspector}</td></tr>`;
     };
 
     const summary = allLineItems.map((item, idx) => summarize(item, idx)).join('');
@@ -195,6 +196,7 @@ ${newly || '<li>No newly flagged items</li>'}
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Qty</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Actual Shipping Date</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspector</th>
 </tr>
 </thead>
