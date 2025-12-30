@@ -1024,30 +1024,32 @@
 
         return `
           <div class="line-item" data-li-id="${liId}">
-            <div class="line-item-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px;">
-              <div style="flex: 1;">
-                <div class="line-item-name" style="font-weight: bold; color: #333; margin-bottom: 8px;">${name}</div>
-                <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+            <div class="line-item-header" style="display: flex; gap: 15px; align-items: stretch; padding: 12px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px;">
+              <!-- LEFT SIDE: Product Details -->
+              <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                <div class="line-item-name" style="font-weight: bold; color: #333; margin-bottom: 6px;">${name}</div>
+                <div style="font-size: 12px; color: #666;">
                   Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)}
                 </div>
+              </div>
+              
+              <!-- RIGHT SIDE: Inline Editable Fields -->
+              <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
+                  <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <option value="">-- Select --</option>
+                    <option value="Complete">Complete</option>
+                    <option value="Incorrect">Incorrect</option>
+                    <option value="Missing">Missing</option>
+                  </select>
+                </div>
                 
-                <!-- Inline Editable Fields (Always Visible) -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                  <div>
-                    <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
-                    <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
-                      <option value="">-- Select --</option>
-                      <option value="Complete">Complete</option>
-                      <option value="Incorrect">Incorrect</option>
-                      <option value="Missing">Missing</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label style="font-size: 11px; color: #666; font-weight: 600;">Moved to Other Shelf</label>
-                    <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
-                      <option value="">-- Select --</option>
-                      <option value="Holding Shelf">Holding Shelf</option>
+                <div>
+                  <label style="font-size: 11px; color: #666; font-weight: 600;">Moved to Other Shelf</label>
+                  <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <option value="">-- Select --</option>
+                    <option value="Holding Shelf">Holding Shelf</option>
                       <option value="Done Shelf">Done Shelf</option>
                       <option value="Production Shelf">Production Shelf</option>
                     </select>
@@ -1337,70 +1339,76 @@
           return;
         }
 
-        // Apply to all line items in all invoices
+        // Get all line item fields to find which POs/SIDocs/LineItems exist
         const allFields = resultsDiv.querySelectorAll('.editable-field');
-        const updates = [];
+        const updates = new Map(); // key: "po|sidoc" -> {poNumber, siDocNumber, updates: {lineItemIndex: {...}}}
         
+        // Collect all unique line items from the form
+        const lineItemsMap = new Map();
         allFields.forEach(field => {
-          const fieldName = field.dataset.field;
           const poNumber = field.dataset.po;
           const siDocNumber = field.dataset.siDoc;
           const liIdx = field.dataset.liIdx;
           
           if (!poNumber || !siDocNumber || !liIdx) return;
           
-          // Find or create update for this line item
-          let update = updates.find(u => 
-            u.poNumber === poNumber && 
-            u.siDocNumber === siDocNumber && 
-            u.lineItemIndex === Number(liIdx)
-          );
-          
-          if (!update) {
-            update = {
-              poNumber,
-              siDocNumber,
-              lineItemIndex: Number(liIdx),
-              updates: {}
-            };
-            updates.push(update);
-          }
-          
-          // Apply PO-level values
-          if (poDate && fieldName === 'Actual Shipping Date') {
-            field.value = poDate;
-            update.updates['Actual Shipping Date'] = poDate;
-          }
-          if (poInspector && fieldName === 'Inspector') {
-            field.value = poInspector;
-            update.updates['Inspector'] = poInspector;
-          }
+          const key = `${poNumber}|${siDocNumber}|${liIdx}`;
+          lineItemsMap.set(key, { poNumber, siDocNumber, lineItemIndex: Number(liIdx) });
         });
 
-        // Save all updates
-        const grouped = new Map();
-        updates.forEach(u => {
-          const key = `${u.poNumber}|${u.siDocNumber}`;
-          if (!grouped.has(key)) {
-            grouped.set(key, { poNumber: u.poNumber, siDocNumber: u.siDocNumber, updates: [] });
+        // Create updates for each line item with PO-level values
+        lineItemsMap.forEach(({ poNumber, siDocNumber, lineItemIndex }) => {
+          const key = `${poNumber}|${siDocNumber}`;
+          
+          if (!updates.has(key)) {
+            updates.set(key, {
+              poNumber,
+              siDocNumber,
+              updates: {}
+            });
           }
-          grouped.get(key).updates.push({ lineItemIndex: u.lineItemIndex, updates: u.updates });
+          
+          const updateItem = updates.get(key);
+          if (!updateItem.updates[lineItemIndex]) {
+            updateItem.updates[lineItemIndex] = { lineItemIndex, updates: {} };
+          }
+          
+          // Apply PO-level values to this line item
+          if (poDate) updateItem.updates[lineItemIndex].updates['Actual Shipping Date'] = poDate;
+          if (poInspector) updateItem.updates[lineItemIndex].updates['Inspector'] = poInspector;
         });
+
+        // Convert to array format for API
+        const payloads = Array.from(updates.values()).map(payload => ({
+          ...payload,
+          updates: Object.values(payload.updates).filter(u => Object.keys(u.updates).length > 0)
+        })).filter(p => p.updates.length > 0);
+
+        if (payloads.length === 0) {
+          alert('No line items found to update.');
+          return;
+        }
 
         try {
           e.target.disabled = true;
           e.target.textContent = 'Applying...';
           
-          for (const payload of grouped.values()) {
+          for (const payload of payloads) {
             const resp = await fetch('/.netlify/functions/api/updateLineItemsBulk', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             });
-            if (!resp.ok) throw new Error('Save failed');
+            if (!resp.ok) {
+              const errData = await resp.json().catch(() => ({}));
+              throw new Error(errData.error || 'Save failed');
+            }
           }
           
           e.target.textContent = '✅ Applied!';
+          // Clear the PO-level fields after successful save
+          document.getElementById('poActualShippingDate').value = '';
+          document.getElementById('poInspector').value = '';
           setTimeout(() => { e.target.textContent = 'Apply to All Line Items'; }, 2000);
         } catch (err) {
           console.error('Apply error:', err);
