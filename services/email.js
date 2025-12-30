@@ -10,10 +10,10 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Send email for incomplete line item
- * @param {object} lineItemData - Line item data with all columns A-U
+ * Send email for incorrect line item
+ * @param {object} lineItemData - Line item data with all columns A-S
  */
-async function sendIncompleteAlert(lineItemData) {
+async function sendIncorrectAlert(lineItemData) {
   try {
     const po = lineItemData['PO Number'] || 'N/A';
     const siDoc = lineItemData['SI Doc Number'] || 'N/A';
@@ -25,59 +25,62 @@ async function sendIncompleteAlert(lineItemData) {
     const qty = lineItemData['Quantity Shipped'] || 'N/A';
     const price = lineItemData['Unit Price'] || '0';
     const total = lineItemData['Line Item Total'] || '0';
-    const shelfLoc = lineItemData['Shelf Location'] || 'Not assigned';
 
     const emailBody = `
-INSPECTION STATUS: INCOMPLETE
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2 style="color: #ff6b35;">INSPECTION STATUS: INCORRECT</h2>
 
-PO Number: ${po}
-SI Doc Number: ${siDoc}
-Line Item Index: ${liIndex}
-Item Description: ${itemDesc}
-Quantity Shipped: ${qty}
-Unit Price: $${price}
-Line Item Total: $${total}
+<p><strong>PO Number:</strong> <strong style="font-size: 1.1em;">${po}</strong></p>
+<p><strong>SI Doc Number:</strong> ${siDoc}</p>
+<p><strong>Line Item Index:</strong> <strong style="font-size: 1.1em;">${liIndex}</strong></p>
+<p><strong>Item Description:</strong> ${itemDesc}</p>
+<p><strong>Quantity Shipped:</strong> ${qty}</p>
+<p><strong>Unit Price:</strong> $${price}</p>
+<p><strong>Line Item Total:</strong> $${total}</p>
 
-Inspector: ${inspector}
-Actual Shipping Date: ${lineItemData['Actual Shipping Date'] || 'Not set'}
-Inspection Notes: ${notes}
-Shelf Location: ${shelfLoc}
-Moved to Other Shelf: ${lineItemData['Moved to Other Shelf'] || 'Not set'}
-New Shelf Location: ${lineItemData['New Shelf Location'] || 'Not set'}
+<h3>Inspection Details</h3>
+<p><strong>Inspector:</strong> ${inspector}</p>
+<p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
+<p><strong>Inspection Notes:</strong> ${notes}</p>
+<p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
 
-Supplier: ${supplier}
-SI Doc Date: ${lineItemData['SI Doc Date'] || 'N/A'}
-Ship Date: ${lineItemData['Ship Date'] || 'N/A'}
-Invoice Total: $${lineItemData['Invoice Total'] || '0'}
+<h3>Supplier Information</h3>
+<p><strong>Supplier:</strong> ${supplier}</p>
+<p><strong>SI Doc Date:</strong> ${lineItemData['SI Doc Date'] || 'N/A'}</p>
+<p><strong>Ship Date:</strong> ${lineItemData['Ship Date'] || 'N/A'}</p>
+<p><strong>Invoice Total:</strong> $${lineItemData['Invoice Total'] || '0'}</p>
 
-ACTION REQUIRED: Please review this incomplete line item.
-Last Updated: ${lineItemData['Last Updated'] || new Date().toISOString()}
+<p style="color: #ff6b35; font-weight: bold;">ACTION REQUIRED: Please review this incorrect line item.</p>
+<p><em>Last Updated: ${lineItemData['Last Updated'] || new Date().toISOString()}</em></p>
 
----
-Sports Plus Inspection System
+<hr>
+<p><em>Sports Plus Inspection System</em></p>
+</body>
+</html>
     `;
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
-      subject: `⚠️ INCOMPLETE - PO: ${po} | Line Item #${liIndex}`,
-      text: emailBody,
+      subject: `⚠️ INCORRECT - PO: ${po} | Line Item #${liIndex}`,
+      html: emailBody,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Incomplete Alert Email Sent: ${info.messageId}`);
+    console.log(`✉️ Incorrect Alert Email Sent: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error('❌ Error sending incomplete alert email:', error.message);
+    console.error('❌ Error sending incorrect alert email:', error.message);
     return false;
   }
 }
 
 /**
- * Send email for defective line item
- * @param {object} lineItemData - Line item data with all columns A-U
+ * Send email for missing line item
+ * @param {object} lineItemData - Line item data with all columns A-S
  */
-async function sendDefectiveAlert(lineItemData) {
+async function sendMissingAlert(lineItemData) {
   try {
     const po = lineItemData['PO Number'] || 'N/A';
     const siDoc = lineItemData['SI Doc Number'] || 'N/A';
@@ -89,59 +92,62 @@ async function sendDefectiveAlert(lineItemData) {
     const qty = lineItemData['Quantity Shipped'] || 'N/A';
     const price = lineItemData['Unit Price'] || '0';
     const total = lineItemData['Line Item Total'] || '0';
-    const shelfLoc = lineItemData['Shelf Location'] || 'Not assigned';
 
     const emailBody = `
-INSPECTION STATUS: DEFECTIVE
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2 style="color: #dc3545;">INSPECTION STATUS: MISSING</h2>
 
-PO Number: ${po}
-SI Doc Number: ${siDoc}
-Line Item Index: ${liIndex}
-Item Description: ${itemDesc}
-Quantity Shipped: ${qty}
-Unit Price: $${price}
-Line Item Total: $${total}
+<p><strong>PO Number:</strong> <strong style="font-size: 1.1em;">${po}</strong></p>
+<p><strong>SI Doc Number:</strong> ${siDoc}</p>
+<p><strong>Line Item Index:</strong> <strong style="font-size: 1.1em;">${liIndex}</strong></p>
+<p><strong>Item Description:</strong> ${itemDesc}</p>
+<p><strong>Quantity Shipped:</strong> ${qty}</p>
+<p><strong>Unit Price:</strong> $${price}</p>
+<p><strong>Line Item Total:</strong> $${total}</p>
 
-Inspector: ${inspector}
-Actual Shipping Date: ${lineItemData['Actual Shipping Date'] || 'Not set'}
-Inspection Notes: ${notes}
-Shelf Location: ${shelfLoc}
-Moved to Other Shelf: ${lineItemData['Moved to Other Shelf'] || 'Not set'}
-New Shelf Location: ${lineItemData['New Shelf Location'] || 'Not set'}
+<h3>Inspection Details</h3>
+<p><strong>Inspector:</strong> ${inspector}</p>
+<p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
+<p><strong>Inspection Notes:</strong> ${notes}</p>
+<p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
 
-Supplier: ${supplier}
-SI Doc Date: ${lineItemData['SI Doc Date'] || 'N/A'}
-Ship Date: ${lineItemData['Ship Date'] || 'N/A'}
-Invoice Total: $${lineItemData['Invoice Total'] || '0'}
+<h3>Supplier Information</h3>
+<p><strong>Supplier:</strong> ${supplier}</p>
+<p><strong>SI Doc Date:</strong> ${lineItemData['SI Doc Date'] || 'N/A'}</p>
+<p><strong>Ship Date:</strong> ${lineItemData['Ship Date'] || 'N/A'}</p>
+<p><strong>Invoice Total:</strong> $${lineItemData['Invoice Total'] || '0'}</p>
 
-ACTION REQUIRED: Defective items need immediate attention.
-Last Updated: ${lineItemData['Last Updated'] || new Date().toISOString()}
+<p style="color: #dc3545; font-weight: bold;">🚨 ACTION REQUIRED: Missing items need immediate attention.</p>
+<p><em>Last Updated: ${lineItemData['Last Updated'] || new Date().toISOString()}</em></p>
 
----
-Sports Plus Inspection System
+<hr>
+<p><em>Sports Plus Inspection System</em></p>
+</body>
+</html>
     `;
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
-      subject: `🚨 DEFECTIVE - PO: ${po} | Line Item #${liIndex}`,
-      text: emailBody,
+      subject: `🚨 MISSING - PO: ${po} | Line Item #${liIndex}`,
+      html: emailBody,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Defective Alert Email Sent: ${info.messageId}`);
+    console.log(`✉️ Missing Alert Email Sent: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error('❌ Error sending defective alert email:', error.message);
+    console.error('❌ Error sending missing alert email:', error.message);
     return false;
   }
 }
 
 /**
- * Send aggregated status digest for Incomplete/Defective line items
+ * Send aggregated status digest for Incorrect/Missing line items
  * @param {string} poNumber
  * @param {Array<Object>} allLineItems - all line items for the PO (post-update)
- * @param {Array<Object>} newlyFlagged - line items that just became Incomplete/Defective
+ * @param {Array<Object>} newlyFlagged - line items that just became Incorrect/Missing
  */
 async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) {
   try {
@@ -156,38 +162,58 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
       const inspector = item['Inspector'] || 'Unknown';
       const qty = item['Quantity Shipped'] || '0';
       const notes = item['Inspection Notes'] || 'No notes';
-      return `Line ${idx + 1}: ${desc}\nStatus: ${status}\nQty: ${qty}\nInspector: ${inspector}\nNotes: ${notes}\n`;
+      return `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Line ${idx + 1}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${desc}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${status}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${qty}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${inspector}</td></tr>`;
     };
 
-    const summary = allLineItems.map(summarize).join('\n');
+    const summary = allLineItems.map((item, idx) => summarize(item, idx)).join('');
     const newly = newlyFlagged.map((item) => {
       const desc = item['Item Description'] || 'Unnamed Item';
       const status = item['Inspection Status'] || 'N/A';
       const idx = item['Line Item Index'] || 'N/A';
-      return `• Line ${idx}: ${desc} -> ${status}`;
-    }).join('\n');
+      return `<li><strong>Line ${idx}:</strong> ${desc} &rarr; ${status}</li>`;
+    }).join('');
 
     const emailBody = `
-INSPECTION ALERT DIGEST
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2 style="color: #ff6b35;">INSPECTION ALERT DIGEST</h2>
 
-PO Number: ${poNumber}
-Supplier: ${supplier}
-SI Doc Number: ${siDoc}
+<p><strong>PO Number:</strong> <strong style="font-size: 1.2em;">${poNumber}</strong></p>
+<p><strong>Supplier:</strong> ${supplier}</p>
+<p><strong>SI Doc Number:</strong> ${siDoc}</p>
 
-Triggered by new Incomplete/Defective updates:
-${newly || 'No newly flagged items'}
+<h3 style="color: #dc3545;">Triggered by new Incorrect/Missing updates:</h3>
+<ul style="line-height: 2;">
+${newly || '<li>No newly flagged items</li>'}
+</ul>
 
-All Line Items:
+<h3>All Line Items:</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+<thead>
+<tr style="background: #f5f5f5;">
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Line</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Qty</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspector</th>
+</tr>
+</thead>
+<tbody>
 ${summary}
----
-Sports Plus Inspection System
+</tbody>
+</table>
+
+<hr>
+<p><em>Sports Plus Inspection System</em></p>
+</body>
+</html>
     `;
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
-      subject: `⚠️ PO ${poNumber} - Incomplete/Defective Digest`,
-      text: emailBody,
+      subject: `⚠️ PO ${poNumber} - Incorrect/Missing Digest`,
+      html: emailBody,
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -276,8 +302,8 @@ async function testEmailConnection() {
 }
 
 module.exports = {
-  sendIncompleteAlert,
-  sendDefectiveAlert,
+  sendIncorrectAlert,
+  sendMissingAlert,
   sendStatusDigest,
   sendPOCompletionEmail,
   testEmailConnection,

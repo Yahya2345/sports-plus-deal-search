@@ -227,7 +227,7 @@ module.exports = {
       // Get all rows to find the target
       const resp = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:U`,
+        range: `${SHEET_NAME}!A:S`,
       });
 
       const rows = resp.data.values || [];
@@ -239,7 +239,7 @@ module.exports = {
         'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
         'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
         'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
-        'Inspection Status', 'Inspection Notes', 'Shelf Location', 'Moved to Other Shelf', 'New Shelf Location'
+        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
       ];
       const headersMissingExtended = headers.length < expectedHeaders.length || expectedHeaders.some(h => !headers.includes(h));
       if (headersMissingExtended) {
@@ -276,7 +276,7 @@ module.exports = {
       const existingRow = rows[targetRowIndex - 1];
       const updateRow = existingRow.slice(); // Clone
 
-      // Pad row to 21 columns so O–U can be written reliably
+      // Pad row to 19 columns so O–S can be written reliably
       for (let i = 0; i < headers.length; i++) {
         if (typeof updateRow[i] === 'undefined') updateRow[i] = '';
       }
@@ -292,7 +292,7 @@ module.exports = {
       // Write back to sheet
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A${targetRowIndex}:U${targetRowIndex}`,
+        range: `${SHEET_NAME}!A${targetRowIndex}:S${targetRowIndex}`,
         valueInputOption: 'RAW',
         resource: { values: [updateRow] },
       });
@@ -308,12 +308,12 @@ module.exports = {
 
   /**
    * Save ALL SI invoice line items as individual rows into Google Sheet.
-   * Expects headers including 21 columns (A-U):
+   * Expects headers including 19 columns (A-S):
    * [
    *  'PO Number','SI Doc Number','SI Doc Date','Supplier Name','Ship Date','Invoice Total',
    *  'Invoice Status','Line Item Index','Item Description','Quantity Shipped','Unit Price',
    *  'Line Item Total','Item Status','Last Updated','Actual Shipping Date','Inspector',
-   *  'Inspection Status','Inspection Notes','Shelf Location','Moved to Other Shelf','New Shelf Location'
+   *  'Inspection Status','Inspection Notes','Moved to Other Shelf'
    * ]
    *
    * @param {string} poNumber - PO Number searched
@@ -335,7 +335,7 @@ module.exports = {
       'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
       'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
       'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
-      'Inspection Status', 'Inspection Notes', 'Shelf Location', 'Moved to Other Shelf', 'New Shelf Location'
+      'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
     ];
 
     if (!headers || headers.length === 0) {
@@ -354,7 +354,7 @@ module.exports = {
     // Read ALL existing data to check for duplicates (UPSERT logic)
     const allDataResp = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A2:U`,
+      range: `${SHEET_NAME}!A2:S`,
     });
     const existingRows = allDataResp.data.values || [];
 
@@ -410,27 +410,23 @@ module.exports = {
           'Inspector': '',
           'Inspection Status': '',
           'Inspection Notes': '',
-          'Shelf Location': '',
           'Moved to Other Shelf': '',
-          'New Shelf Location': '',
         };
 
         const newRow = cols.map(h => placeholder[h] ?? '');
 
         if (existingMap.has(key)) {
-          // UPDATE: Preserve columns O-U (editable fields)
+          // UPDATE: Preserve columns O-S (editable fields)
           const existing = existingMap.get(key);
-          const preservedFields = existing.existingData.slice(14, 21); // Columns O-U (indices 14-20)
+          const preservedFields = existing.existingData.slice(14, 19); // Columns O-S (indices 14-18)
           newRow[14] = preservedFields[0] || ''; // Actual Shipping Date
           newRow[15] = preservedFields[1] || ''; // Inspector
           newRow[16] = preservedFields[2] || ''; // Inspection Status
           newRow[17] = preservedFields[3] || ''; // Inspection Notes
-          newRow[18] = preservedFields[4] || ''; // Shelf Location
-          newRow[19] = preservedFields[5] || ''; // Moved to Other Shelf
-          newRow[20] = preservedFields[6] || ''; // New Shelf Location
+          newRow[18] = preservedFields[4] || ''; // Moved to Other Shelf
 
           rowsToUpdate.push({
-            range: `${SHEET_NAME}!A${existing.rowNumber}:U${existing.rowNumber}`,
+            range: `${SHEET_NAME}!A${existing.rowNumber}:S${existing.rowNumber}`,
             values: [newRow]
           });
         } else {
@@ -468,27 +464,23 @@ module.exports = {
           'Inspector': '',
           'Inspection Status': '',
           'Inspection Notes': '',
-          'Shelf Location': '',
           'Moved to Other Shelf': '',
-          'New Shelf Location': '',
         };
 
         const newRow = cols.map(h => rowObj[h] ?? '');
 
         if (existingMap.has(key)) {
-          // UPDATE: Preserve columns O-U (editable fields)
+          // UPDATE: Preserve columns O-S (editable fields)
           const existing = existingMap.get(key);
-          const preservedFields = existing.existingData.slice(14, 21); // Columns O-U (indices 14-20)
+          const preservedFields = existing.existingData.slice(14, 19); // Columns O-S (indices 14-18)
           newRow[14] = preservedFields[0] || ''; // Actual Shipping Date
           newRow[15] = preservedFields[1] || ''; // Inspector
           newRow[16] = preservedFields[2] || ''; // Inspection Status
           newRow[17] = preservedFields[3] || ''; // Inspection Notes
-          newRow[18] = preservedFields[4] || ''; // Shelf Location
-          newRow[19] = preservedFields[5] || ''; // Moved to Other Shelf
-          newRow[20] = preservedFields[6] || ''; // New Shelf Location
+          newRow[18] = preservedFields[4] || ''; // Moved to Other Shelf
 
           rowsToUpdate.push({
-            range: `${SHEET_NAME}!A${existing.rowNumber}:U${existing.rowNumber}`,
+            range: `${SHEET_NAME}!A${existing.rowNumber}:S${existing.rowNumber}`,
             values: [newRow]
           });
         } else {
@@ -518,7 +510,7 @@ module.exports = {
     if (rowsToAppend.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:U`,
+        range: `${SHEET_NAME}!A:S`,
         valueInputOption: 'RAW',
         insertDataOption: 'INSERT_ROWS',
         resource: { values: rowsToAppend },
@@ -544,7 +536,7 @@ module.exports = {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:U`,
+        range: `${SHEET_NAME}!A:S`,
       });
 
       const rows = response.data.values || [];
@@ -588,7 +580,7 @@ module.exports = {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:U`,
+        range: `${SHEET_NAME}!A:S`,
       });
 
       const rows = response.data.values || [];
@@ -635,7 +627,7 @@ module.exports = {
       const sheets = getGoogleSheetsClient();
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:U`,
+        range: `${SHEET_NAME}!A:S`,
       });
 
       const rows = response.data.values || [];

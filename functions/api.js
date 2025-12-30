@@ -306,11 +306,11 @@ async function handleTestEmail() {
     'Item Description': 'Test Item for Email Verification',
     'Quantity Shipped': '10',
     Inspector: 'Test Inspector',
-    'Inspection Status': 'Incomplete',
+    'Inspection Status': 'Incorrect',
     'Inspection Notes': 'This is a test email from the Sports Plus system.'
   };
 
-  await email.sendIncompleteAlert(testLineItem);
+  await email.sendIncorrectAlert(testLineItem);
 
   return json(200, {
     success: true,
@@ -349,7 +349,7 @@ async function handleUpdateLineItemsBulk(event) {
     const key = `${item['PO Number']}|${item['SI Doc Number']}|${item['Line Item Index']}`;
     const prev = statusBefore.get(key) || '';
     const curr = (item['Inspection Status'] || '').trim();
-    return (curr === 'Incomplete' || curr === 'Defective') && curr !== prev;
+    return (curr === 'Incorrect' || curr === 'Missing') && curr !== prev;
   });
 
   let digestSent = false;
@@ -398,12 +398,12 @@ async function handleUpdateLineItem(event) {
   if (lineItemData) {
     const inspectionStatus = lineItemData['Inspection Status'] || '';
 
-    if (inspectionStatus === 'Incomplete') {
-      await email.sendIncompleteAlert(lineItemData);
+    if (inspectionStatus === 'Incorrect') {
+      await email.sendIncorrectAlert(lineItemData);
     }
 
-    if (inspectionStatus === 'Defective') {
-      await email.sendDefectiveAlert(lineItemData);
+    if (inspectionStatus === 'Missing') {
+      await email.sendMissingAlert(lineItemData);
     }
 
     if (inspectionStatus === 'Complete') {
