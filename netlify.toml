@@ -3,6 +3,9 @@
   functions = "functions"
   publish = "public"
 
+[build.environment]
+  PUPPETEER_SKIP_DOWNLOAD = "true"
+
 [dev]
   command = "npm install && netlify dev"
   functions = "functions"
