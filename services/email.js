@@ -43,6 +43,7 @@ async function sendIncorrectAlert(lineItemData) {
 <p><strong>Inspector:</strong> ${inspector}</p>
 <p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
 <p><strong>Inspection Notes:</strong> ${notes}</p>
+<p><strong>Inspector Note:</strong> ${lineItemData['Inspector Note'] || 'No additional notes'}</p>
 <p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
 
 <h3>Supplier Information</h3>
@@ -110,6 +111,7 @@ async function sendMissingAlert(lineItemData) {
 <p><strong>Inspector:</strong> ${inspector}</p>
 <p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
 <p><strong>Inspection Notes:</strong> ${notes}</p>
+<p><strong>Inspector Note:</strong> ${lineItemData['Inspector Note'] || 'No additional notes'}</p>
 <p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
 
 <h3>Supplier Information</h3>
