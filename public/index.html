@@ -1024,7 +1024,7 @@
 
         return `
           <div class="line-item" data-li-id="${liId}">
-            <div class="line-item-header" style="display: flex; gap: 15px; align-items: stretch; padding: 12px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px;">
+            <div class="line-item-header" style="display: flex; gap: 15px; align-items: center; padding: 12px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px; cursor: pointer;">
               <!-- LEFT SIDE: Product Details -->
               <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
                 <div class="line-item-name" style="font-weight: bold; color: #333; margin-bottom: 6px;">${name}</div>
@@ -1033,8 +1033,8 @@
                 </div>
               </div>
               
-              <!-- RIGHT SIDE: Inline Editable Fields -->
-              <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <!-- CENTER: Inline Editable Fields -->
+              <div style="flex: 1.2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
                   <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
@@ -1050,13 +1050,14 @@
                   <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
                     <option value="">-- Select --</option>
                     <option value="Holding Shelf">Holding Shelf</option>
-                      <option value="Done Shelf">Done Shelf</option>
-                      <option value="Production Shelf">Production Shelf</option>
-                    </select>
-                  </div>
+                    <option value="Done Shelf">Done Shelf</option>
+                    <option value="Production Shelf">Production Shelf</option>
+                  </select>
                 </div>
               </div>
-              <span class="line-item-toggle" style="font-size: 18px; transition: transform 0.3s; cursor: pointer; padding: 0 10px;">▼</span>
+              
+              <!-- RIGHT: Expand Arrow -->
+              <span class="line-item-toggle" style="font-size: 20px; transition: transform 0.3s; cursor: pointer; padding: 0 8px; flex-shrink: 0;">▶</span>
             </div>
             
             <div class="line-item-content" style="display: none;">
@@ -1155,19 +1156,19 @@
           
           contentHTML += `
             <div class="invoice-card" data-invoice-id="${invoiceId}">
-              <div class="invoice-card-header">
+              <div class="invoice-card-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f5f5f5; border-radius: 6px;">
                 <div>
                   <div class="invoice-vendor">📦 ${invoice.Supplier || 'Unknown Vendor'} ${statusBadge}</div>
                   <div class="invoice-doc-number">SI Doc #${invoice['SI Doc Number']} | Supplier Doc #${invoice['Supplier Doc Number']}</div>
                 </div>
-                <span class="expand-icon">▼</span>
+                <span class="expand-icon" style="font-size: 18px; transition: transform 0.3s; cursor: pointer;">▶</span>
               </div>
-              <div class="invoice-summary">
+              <div class="invoice-summary" style="display: none; padding: 10px; background: #fafafa; border-bottom: 1px solid #eee;">
                 <div><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</div>
                 <div><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</div>
                 <div><strong>Line Items:</strong> ${invoice['Line Items Count']}</div>
               </div>
-              <div class="invoice-detail">
+              <div class="invoice-detail" style="display: none;">
                 ${hasRealLineItems ? renderSiLineItems(invoice._lineItems, invoice) : '<div class="no-line-items">Line items not available (scanned document)</div>'}
               </div>
             </div>
@@ -1215,31 +1216,29 @@
 
       // Attach click handlers for expandable invoice cards
       document.querySelectorAll('.invoice-card').forEach(card => {
+        const header = card.querySelector('.invoice-card-header');
+        const summary = card.querySelector('.invoice-summary');
+        const detail = card.querySelector('.invoice-detail');
         const expandIcon = card.querySelector('.expand-icon');
         
-        // Click on card: expand if not expanded
-        card.addEventListener('click', (e) => {
-          // Don't handle if clicking on actions or inputs
-          if (e.target.closest('.line-items-actions') || e.target.closest('input')) {
-            return;
-          }
-          
-          // If clicking the expand icon, let its handler deal with it
-          if (e.target.closest('.expand-icon')) {
-            return;
-          }
-          
-          // Expand card if not already expanded
-          if (!card.classList.contains('expanded')) {
-            card.classList.add('expanded');
-          }
-        });
-        
-        // Click on expand icon: toggle expanded state
-        if (expandIcon) {
-          expandIcon.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card click handler
-            card.classList.toggle('expanded');
+        // Click on card header to toggle expansion
+        if (header) {
+          header.addEventListener('click', (e) => {
+            if (e.target.closest('.editable-field')) return; // Don't toggle if clicking field
+            
+            const isExpanded = summary.style.display !== 'none';
+            
+            if (isExpanded) {
+              // Collapse
+              summary.style.display = 'none';
+              detail.style.display = 'none';
+              expandIcon.style.transform = 'rotate(0deg)';
+            } else {
+              // Expand
+              summary.style.display = 'block';
+              detail.style.display = 'block';
+              expandIcon.style.transform = 'rotate(90deg)';
+            }
           });
         }
       });
