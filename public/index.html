@@ -634,6 +634,7 @@
   <script>
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('results');
+    let currentInvoices = [];
 
     // Ensure date picker opens when clicking anywhere on date inputs
     document.addEventListener('click', (e) => {
@@ -1036,7 +1037,7 @@
                   </select>
                 </div>
 
-                <div style="grid-column: 1 / -1;">
+                <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Notes</label>
                   <textarea class="editable-field" data-field="Inspection Notes" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 70px; font-family: inherit; font-size: 13px;"></textarea>
                 </div>
@@ -1049,6 +1050,7 @@
 
     async function displayResults(searchData) {
       const { invoices, deals } = searchData;
+      currentInvoices = invoices || [];
 
       if ((!invoices || invoices.length === 0) && (!deals || deals.length === 0)) {
         resultsDiv.innerHTML = '<div class="no-results">No data found matching your search.</div>';
@@ -1294,8 +1296,8 @@
       const grouped = new Map(); // key: po|si -> { poNumber, siDocNumber, updatesMap: Map(lineItemIndex -> {lineItemIndex, updates}) }
 
       // Seed every line item for all invoices so header fields apply even when no per-line edits
-      if (invoices && invoices.length > 0) {
-        invoices.forEach(inv => {
+      if (currentInvoices && currentInvoices.length > 0) {
+        currentInvoices.forEach(inv => {
           const poNumber = inv['PO Number'];
           const siDocNumber = inv['SI Doc Number'];
           const key = `${poNumber}|${siDocNumber}`;
