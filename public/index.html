@@ -599,32 +599,6 @@
         >
       </div>
 
-      <!-- PO-Level Fields (shown after search) -->
-      <div id="poLevelFields" style="display: none; max-width: 800px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <h3 style="margin: 0; color: #2d3e50;">PO# <span id="currentPO" style="color: #ff6b35;"></span></h3>
-          <button id="applyToAllBtn" style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Apply to All Line Items</button>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div>
-            <label style="font-size: 13px; color: #666; font-weight: 600;">Actual Shipping Date</label>
-            <input type="date" id="poActualShippingDate" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; cursor: pointer;"/>
-          </div>
-          <div>
-            <label style="font-size: 13px; color: #666; font-weight: 600;">Inspector</label>
-            <select id="poInspector" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
-              <option value="">-- Select --</option>
-              <option value="JJ">JJ</option>
-              <option value="SS">SS</option>
-              <option value="May">May</option>
-              <option value="Corey">Corey</option>
-              <option value="Sam">Sam</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       <div id="results"></div>
     </div>
   </main>
@@ -660,6 +634,14 @@
   <script>
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('results');
+
+    // Ensure date picker opens when clicking anywhere on date inputs
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (target instanceof HTMLInputElement && target.type === 'date' && typeof target.showPicker === 'function') {
+        target.showPicker();
+      }
+    });
 
     let searchTimeout;
 
@@ -1023,18 +1005,17 @@
         const liId = `li-${invoice['SI Doc Number']}-${idx + 1}`;
 
         return `
-          <div class="line-item" data-li-id="${liId}">
-            <div class="line-item-header" style="display: flex; gap: 15px; align-items: center; padding: 12px; background: #f5f5f5; border-radius: 6px; margin-bottom: 10px; cursor: pointer;">
-              <!-- LEFT SIDE: Product Details -->
-              <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div class="line-item-name" style="font-weight: bold; color: #333; margin-bottom: 6px;">${name}</div>
-                <div style="font-size: 12px; color: #666;">
-                  Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)}
-                </div>
+          <div class="line-item" data-li-id="${liId}" style="background: #f5f5f5; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start;">
+              <!-- LEFT: Product Details -->
+              <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 6px;">
+                <div class="line-item-name" style="font-weight: bold; color: #333;">${name}</div>
+                <div style="font-size: 12px; color: #666;">Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #555;">${upc}${size}${color}</div>
               </div>
-              
-              <!-- CENTER: Inline Editable Fields -->
-              <div style="flex: 1.2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+              <!-- RIGHT: Inline Editable Fields including Notes -->
+              <div style="flex: 1.4; min-width: 320px; display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 10px;">
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
                   <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
@@ -1044,7 +1025,7 @@
                     <option value="Missing">Missing</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Moved to Other Shelf</label>
                   <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
@@ -1054,27 +1035,9 @@
                     <option value="Production Shelf">Production Shelf</option>
                   </select>
                 </div>
-              </div>
-              
-              <!-- RIGHT: Expand Arrow -->
-              <span class="line-item-toggle" style="font-size: 20px; transition: transform 0.3s; cursor: pointer; padding: 0 8px; flex-shrink: 0;">▶</span>
-            </div>
-            
-            <div class="line-item-content" style="display: none;">
-              <div class="line-item-details" style="margin-bottom: 15px; padding: 10px; background: #fafafa; border-radius: 6px;">
-                <div class="line-item-detail"><strong>Qty:</strong> ${qty}</div>
-                <div class="line-item-detail"><strong>Price:</strong> ${formatCurrency(price)}</div>
-                <div class="line-item-detail"><strong>Total:</strong> ${formatCurrency(total)}</div>
-                ${upc}
-                ${size}
-                ${color}
-              </div>
-            
-              <div class="editable-fields" style="margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 6px;">
-                <div style="font-weight: bold; margin-bottom: 10px; color: #ff6b35;">Inspection Notes</div>
-                
-                <div style="margin-bottom: 10px;">
-                  <label style="font-size: 12px; color: #666;">Notes</label>
+
+                <div style="grid-column: 1 / -1;">
+                  <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Notes</label>
                   <textarea class="editable-field" data-field="Inspection Notes" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; font-family: inherit; font-size: 13px;"></textarea>
                 </div>
               </div>
@@ -1137,8 +1100,29 @@
       // Invoices Section
       if (invoices && invoices.length > 0) {
         contentHTML += `
-          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-            <div>📋 Sports Inc Invoices</div>
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="font-weight: bold;">📋 Sports Inc Invoices</div>
+
+            <div style="flex: 1; min-width: 360px; display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; justify-content: center;">
+              <div style="display: flex; flex-direction: column; min-width: 160px;">
+                <label style="font-size: 11px; color: #666; font-weight: 700;">Actual Shipping Date</label>
+                <input type="date" id="poActualShippingDate" style="width: 100%; padding: 8px 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px;" />
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 160px;">
+                <label style="font-size: 11px; color: #666; font-weight: 700;">Inspector</label>
+                <select id="poInspector" style="width: 100%; padding: 8px 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px;">
+                  <option value="">-- Select --</option>
+                  <option value="JJ">JJ</option>
+                  <option value="SS">SS</option>
+                  <option value="May">May</option>
+                  <option value="Corey">Corey</option>
+                  <option value="Sam">Sam</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <button id="applyToAllBtn" style="padding: 9px 14px; background: #2196F3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;">Apply to All Line Items</button>
+            </div>
+
             <div style="display: flex; align-items: center; gap: 8px;">
               <button class="save-all-invoices-btn" style="padding: 8px 14px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Save All Changes</button>
               <span id="save-all-status" style="font-size: 12px; color: #555;"></span>
@@ -1181,16 +1165,6 @@
 
       contentHTML += '</div></div>';
       resultsDiv.innerHTML = contentHTML;
-
-      // Show PO-level fields if there are invoices
-      if (invoices && invoices.length > 0 && invoices[0]['PO Number']) {
-        const poLevelFields = document.getElementById('poLevelFields');
-        const currentPO = document.getElementById('currentPO');
-        if (poLevelFields && currentPO) {
-          currentPO.textContent = invoices[0]['PO Number'];
-          poLevelFields.style.display = 'block';
-        }
-      }
 
       // Populate editable fields with merged values from Sheets AFTER DOM is ready
       setTimeout(() => {
@@ -1241,24 +1215,6 @@
             }
           });
         }
-      });
-
-      // Attach click handlers for collapsible line items
-      document.querySelectorAll('.line-item-header').forEach(header => {
-        header.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent invoice card toggle
-          const lineItem = header.closest('.line-item');
-          const content = lineItem.querySelector('.line-item-content');
-          const toggle = header.querySelector('.line-item-toggle');
-          
-          if (content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block';
-            toggle.style.transform = 'rotate(180deg)';
-          } else {
-            content.style.display = 'none';
-            toggle.style.transform = 'rotate(0deg)';
-          }
-        });
       });
 
       // Fetch HubSpot line items for each deal - TEMPORARILY DISABLED
