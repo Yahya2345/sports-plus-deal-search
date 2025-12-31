@@ -998,9 +998,9 @@
         const qty = li.quantityShipped ?? li.quantityOrdered ?? 'N/A';
         const price = li.netPrice ?? li.listPrice ?? 0;
         const total = li.extension ?? (price && qty ? price * qty : 0);
-        const upc = li.upc ? `<div class="line-item-detail"><strong>UPC:</strong> ${li.upc}</div>` : '';
-        const size = li.size ? `<div class="line-item-detail"><strong>Size:</strong> ${li.size}</div>` : '';
-        const color = li.color ? `<div class="line-item-detail"><strong>Color:</strong> ${li.color}</div>` : '';
+        const upc = li.upc ? `<span style="margin-right: 8px;"><strong>UPC:</strong> ${li.upc}</span>` : '';
+        const size = li.size ? `<span style="margin-right: 8px;"><strong>Size:</strong> ${li.size}</span>` : '';
+        const color = li.color ? `<span style="margin-right: 8px;"><strong>Color:</strong> ${li.color}</span>` : '';
 
         const liId = `li-${invoice['SI Doc Number']}-${idx + 1}`;
 
@@ -1010,15 +1010,15 @@
               <!-- LEFT: Product Details -->
               <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 6px;">
                 <div class="line-item-name" style="font-weight: bold; color: #333;">${name}</div>
-                <div style="font-size: 12px; color: #666;">Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #555;">${upc}${size}${color}</div>
+                <div style="font-size: 12px; color: #666;">Qty: ${qty} | Price: ${formatCurrency(price)} | Total: ${formatCurrency(total)} ${color}${size}</div>
+                <div style="font-size: 11px; color: #555;">${upc}</div>
               </div>
 
               <!-- RIGHT: Inline Editable Fields including Notes -->
-              <div style="flex: 1.4; min-width: 320px; display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 10px;">
+              <div style="flex: 1.4; min-width: 320px; display: grid; grid-template-columns: 0.8fr 0.8fr 1.6fr; gap: 10px; align-items: start;">
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
-                  <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
+                  <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 12px;">
                     <option value="">-- Select --</option>
                     <option value="Complete">Complete</option>
                     <option value="Incorrect">Incorrect</option>
@@ -1028,7 +1028,7 @@
 
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Moved to Other Shelf</label>
-                  <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
+                  <select class="editable-field" data-field="Moved to Other Shelf" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 12px;">
                     <option value="">-- Select --</option>
                     <option value="Holding Shelf">Holding Shelf</option>
                     <option value="Done Shelf">Done Shelf</option>
@@ -1038,7 +1038,7 @@
 
                 <div style="grid-column: 1 / -1;">
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Notes</label>
-                  <textarea class="editable-field" data-field="Inspection Notes" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; font-family: inherit; font-size: 13px;"></textarea>
+                  <textarea class="editable-field" data-field="Inspection Notes" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 70px; font-family: inherit; font-size: 13px;"></textarea>
                 </div>
               </div>
             </div>
@@ -1103,7 +1103,7 @@
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
             <div style="font-weight: bold;">📋 Sports Inc Invoices</div>
 
-            <div style="flex: 1; min-width: 360px; display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <div style="flex: 1; min-width: 420px; display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; justify-content: center;">
               <div style="display: flex; flex-direction: column; min-width: 160px;">
                 <label style="font-size: 11px; color: #666; font-weight: 700;">Actual Shipping Date</label>
                 <input type="date" id="poActualShippingDate" style="width: 100%; padding: 8px 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px;" />
@@ -1120,7 +1120,6 @@
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <button id="applyToAllBtn" style="padding: 9px 14px; background: #2196F3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;">Apply to All Line Items</button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -1283,98 +1282,6 @@
       }
     }
 
-    // Handle PO-level "Apply to All" button
-    document.addEventListener('click', async (e) => {
-      if (e.target.id === 'applyToAllBtn') {
-        const poDate = document.getElementById('poActualShippingDate').value;
-        const poInspector = document.getElementById('poInspector').value;
-        
-        if (!poDate && !poInspector) {
-          alert('Please select at least one field to apply.');
-          return;
-        }
-
-        // Get all line item fields to find which POs/SIDocs/LineItems exist
-        const allFields = resultsDiv.querySelectorAll('.editable-field');
-        const updates = new Map(); // key: "po|sidoc" -> {poNumber, siDocNumber, updates: {lineItemIndex: {...}}}
-        
-        // Collect all unique line items from the form
-        const lineItemsMap = new Map();
-        allFields.forEach(field => {
-          const poNumber = field.dataset.po;
-          const siDocNumber = field.dataset.siDoc;
-          const liIdx = field.dataset.liIdx;
-          
-          if (!poNumber || !siDocNumber || !liIdx) return;
-          
-          const key = `${poNumber}|${siDocNumber}|${liIdx}`;
-          lineItemsMap.set(key, { poNumber, siDocNumber, lineItemIndex: Number(liIdx) });
-        });
-
-        // Create updates for each line item with PO-level values
-        lineItemsMap.forEach(({ poNumber, siDocNumber, lineItemIndex }) => {
-          const key = `${poNumber}|${siDocNumber}`;
-          
-          if (!updates.has(key)) {
-            updates.set(key, {
-              poNumber,
-              siDocNumber,
-              updates: {}
-            });
-          }
-          
-          const updateItem = updates.get(key);
-          if (!updateItem.updates[lineItemIndex]) {
-            updateItem.updates[lineItemIndex] = { lineItemIndex, updates: {} };
-          }
-          
-          // Apply PO-level values to this line item
-          if (poDate) updateItem.updates[lineItemIndex].updates['Actual Shipping Date'] = poDate;
-          if (poInspector) updateItem.updates[lineItemIndex].updates['Inspector'] = poInspector;
-        });
-
-        // Convert to array format for API
-        const payloads = Array.from(updates.values()).map(payload => ({
-          ...payload,
-          updates: Object.values(payload.updates).filter(u => Object.keys(u.updates).length > 0)
-        })).filter(p => p.updates.length > 0);
-
-        if (payloads.length === 0) {
-          alert('No line items found to update.');
-          return;
-        }
-
-        try {
-          e.target.disabled = true;
-          e.target.textContent = 'Applying...';
-          
-          for (const payload of payloads) {
-            const resp = await fetch('/.netlify/functions/api/updateLineItemsBulk', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            if (!resp.ok) {
-              const errData = await resp.json().catch(() => ({}));
-              throw new Error(errData.error || 'Save failed');
-            }
-          }
-          
-          e.target.textContent = '✅ Applied!';
-          // Clear the PO-level fields after successful save
-          document.getElementById('poActualShippingDate').value = '';
-          document.getElementById('poInspector').value = '';
-          setTimeout(() => { e.target.textContent = 'Apply to All Line Items'; }, 2000);
-        } catch (err) {
-          console.error('Apply error:', err);
-          alert('Error applying changes: ' + err.message);
-          e.target.textContent = 'Apply to All Line Items';
-        } finally {
-          e.target.disabled = false;
-        }
-      }
-    });
-
     // Handle global save-all (all invoices)
     resultsDiv.addEventListener('click', async (e) => {
       if (!e.target.classList.contains('save-all-invoices-btn')) return;
@@ -1382,6 +1289,8 @@
       const statusEl = document.getElementById('save-all-status');
       const fields = resultsDiv.querySelectorAll('.editable-field');
       const grouped = new Map(); // key: po|si -> { poNumber, siDocNumber, updates: [{lineItemIndex, updates}] }
+      const poDate = document.getElementById('poActualShippingDate')?.value || '';
+      const poInspector = document.getElementById('poInspector')?.value || '';
 
       fields.forEach(field => {
         const poNumber = field.dataset.po;
@@ -1401,11 +1310,17 @@
       });
 
       // Build payloads
-      const payloads = Array.from(grouped.values()).map(g => ({
-        poNumber: g.poNumber,
-        siDocNumber: g.siDocNumber,
-        updates: Array.from(g.updatesMap.values()).filter(u => Object.keys(u.updates).length > 0)
-      })).filter(p => p.updates.length > 0);
+      const payloads = Array.from(grouped.values()).map(g => {
+        Array.from(g.updatesMap.values()).forEach(u => {
+          if (poDate) u.updates['Actual Shipping Date'] = poDate;
+          if (poInspector) u.updates['Inspector'] = poInspector;
+        });
+        return {
+          poNumber: g.poNumber,
+          siDocNumber: g.siDocNumber,
+          updates: Array.from(g.updatesMap.values()).filter(u => Object.keys(u.updates).length > 0)
+        };
+      }).filter(p => p.updates.length > 0);
 
       if (payloads.length === 0) {
         if (statusEl) statusEl.textContent = '⚠️ No changes to save';
