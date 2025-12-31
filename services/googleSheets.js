@@ -307,6 +307,114 @@ module.exports = {
   },
 
   /**
+   * Bulk update multiple line items for a PO/SI doc using a single read + batch update to avoid rate limits.
+   * @param {string} poNumber
+   * @param {string} siDocNumber
+   * @param {Array<{ lineItemIndex: number, updates: Object }>} updatesArr
+   * @returns {Promise<number>} count of rows updated
+   */
+  updateLineItemsBulkInSheet: async function updateLineItemsBulkInSheet(poNumber, siDocNumber, updatesArr) {
+    if (!Array.isArray(updatesArr) || updatesArr.length === 0) return 0;
+
+    try {
+      const sheets = getGoogleSheetsClient();
+
+      // Single read of headers + all rows for this sheet range
+      const resp = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${SHEET_NAME}!A:S`,
+      });
+
+      const rows = resp.data.values || [];
+      if (rows.length === 0) return 0;
+
+      let headers = rows[0];
+      const expectedHeaders = [
+        'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
+        'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
+        'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
+        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
+      ];
+
+      // Ensure headers
+      const headersMissingExtended = headers.length < expectedHeaders.length || expectedHeaders.some(h => !headers.includes(h));
+      if (headersMissingExtended) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `${SHEET_NAME}!A1`,
+          valueInputOption: 'RAW',
+          resource: { values: [expectedHeaders] },
+        });
+        headers = expectedHeaders;
+      }
+
+      // Build lookup: key = PO|SI|Idx -> row number
+      const rowLookup = new Map();
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const rowPO = (row[headers.indexOf('PO Number')] || '').trim();
+        const rowSIDoc = (row[headers.indexOf('SI Doc Number')] || '').trim();
+        const rowIdxRaw = (row[headers.indexOf('Line Item Index')] || '').toString().trim();
+        const rowIdxNum = parseInt(rowIdxRaw, 10);
+        const key = `${rowPO}|${rowSIDoc}|${rowIdxNum}`;
+        rowLookup.set(key, { rowNumber: i + 1, existingRow: row });
+      }
+
+      const data = [];
+      const nowIso = new Date().toISOString();
+
+      for (const upd of updatesArr) {
+        if (!upd || !upd.lineItemIndex || !upd.updates) continue;
+        const key = `${poNumber}|${siDocNumber}|${Number(upd.lineItemIndex)}`;
+        const found = rowLookup.get(key);
+        if (!found) {
+          console.log(`Line item not found for bulk update: ${key}`);
+          continue;
+        }
+
+        const updateRow = found.existingRow.slice();
+        // Pad row to headers length
+        for (let i = 0; i < headers.length; i++) {
+          if (typeof updateRow[i] === 'undefined') updateRow[i] = '';
+        }
+
+        // Apply updates
+        for (const [colName, value] of Object.entries(upd.updates)) {
+          const colIdx = headers.indexOf(colName);
+          if (colIdx >= 0) {
+            updateRow[colIdx] = value;
+          }
+        }
+
+        // Keep Last Updated fresh if present
+        const lastUpdatedIdx = headers.indexOf('Last Updated');
+        if (lastUpdatedIdx >= 0) updateRow[lastUpdatedIdx] = nowIso;
+
+        data.push({
+          range: `${SHEET_NAME}!A${found.rowNumber}:S${found.rowNumber}`,
+          values: [updateRow]
+        });
+      }
+
+      if (data.length === 0) return 0;
+
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+          valueInputOption: 'RAW',
+          data
+        }
+      });
+
+      console.log(`✅ Bulk updated ${data.length} line items in one request`);
+      return data.length;
+    } catch (error) {
+      console.error('Error bulk updating line items:', error.message);
+      throw error;
+    }
+  },
+
+  /**
    * Save ALL SI invoice line items as individual rows into Google Sheet.
    * Expects headers including 19 columns (A-S):
    * [

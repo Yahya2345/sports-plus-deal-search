@@ -332,17 +332,8 @@ async function handleUpdateLineItemsBulk(event) {
     statusBefore.set(key, (item['Inspection Status'] || '').trim());
   });
 
-  let updatedCount = 0;
-  for (const upd of updates) {
-    if (!upd || !upd.lineItemIndex || !upd.updates) continue;
-    const ok = await googleSheets.updateLineItemInSheet(
-      poNumber,
-      siDocNumber,
-      Number(upd.lineItemIndex),
-      upd.updates
-    );
-    if (ok) updatedCount += 1;
-  }
+  // Bulk update in a single read + batch write to avoid Sheets rate limits
+  const updatedCount = await googleSheets.updateLineItemsBulkInSheet(poNumber, siDocNumber, updates);
 
   const afterItems = await googleSheets.getLineItemsForPO(poNumber);
   const newlyFlagged = afterItems.filter((item) => {
