@@ -1288,10 +1288,30 @@
 
       const statusEl = document.getElementById('save-all-status');
       const fields = resultsDiv.querySelectorAll('.editable-field');
-      const grouped = new Map(); // key: po|si -> { poNumber, siDocNumber, updates: [{lineItemIndex, updates}] }
       const poDate = document.getElementById('poActualShippingDate')?.value || '';
       const poInspector = document.getElementById('poInspector')?.value || '';
 
+      const grouped = new Map(); // key: po|si -> { poNumber, siDocNumber, updatesMap: Map(lineItemIndex -> {lineItemIndex, updates}) }
+
+      // Seed every line item for all invoices so header fields apply even when no per-line edits
+      if (invoices && invoices.length > 0) {
+        invoices.forEach(inv => {
+          const poNumber = inv['PO Number'];
+          const siDocNumber = inv['SI Doc Number'];
+          const key = `${poNumber}|${siDocNumber}`;
+          const lineItems = inv._lineItems || [];
+          if (!grouped.has(key)) grouped.set(key, { poNumber, siDocNumber, updatesMap: new Map() });
+          const bucket = grouped.get(key);
+          lineItems.forEach((li, idx) => {
+            const liIdx = idx + 1;
+            if (!bucket.updatesMap.has(liIdx)) {
+              bucket.updatesMap.set(liIdx, { lineItemIndex: liIdx, updates: {} });
+            }
+          });
+        });
+      }
+
+      // Apply per-field edits
       fields.forEach(field => {
         const poNumber = field.dataset.po;
         const siDocNumber = field.dataset.siDoc;
@@ -1309,18 +1329,20 @@
         bucket.updatesMap.get(liIdx).updates[fieldName] = val;
       });
 
-      // Build payloads
-      const payloads = Array.from(grouped.values()).map(g => {
-        Array.from(g.updatesMap.values()).forEach(u => {
+      // Apply header-level Actual Shipping Date and Inspector to every line item bucket
+      grouped.forEach(g => {
+        g.updatesMap.forEach(u => {
           if (poDate) u.updates['Actual Shipping Date'] = poDate;
           if (poInspector) u.updates['Inspector'] = poInspector;
         });
-        return {
-          poNumber: g.poNumber,
-          siDocNumber: g.siDocNumber,
-          updates: Array.from(g.updatesMap.values()).filter(u => Object.keys(u.updates).length > 0)
-        };
-      }).filter(p => p.updates.length > 0);
+      });
+
+      // Build payloads
+      const payloads = Array.from(grouped.values()).map(g => ({
+        poNumber: g.poNumber,
+        siDocNumber: g.siDocNumber,
+        updates: Array.from(g.updatesMap.values()).filter(u => Object.keys(u.updates).length > 0)
+      })).filter(p => p.updates.length > 0);
 
       if (payloads.length === 0) {
         if (statusEl) statusEl.textContent = '⚠️ No changes to save';
