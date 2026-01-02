@@ -335,8 +335,8 @@ async function handleUpdateLineItemsBulk(event) {
   // Bulk update in a single read + batch write to avoid Sheets rate limits
   const updatedCount = await googleSheets.updateLineItemsBulkInSheet(poNumber, siDocNumber, updates);
 
-  // Wait 2 seconds for Google Sheets to propagate changes before reading for email
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Wait 5 seconds for Google Sheets to propagate changes before reading for email
+  await new Promise(resolve => setTimeout(resolve, 5000));
 
   const afterItems = await googleSheets.getLineItemsForPO(poNumber);
   const newlyFlagged = afterItems.filter((item) => {
