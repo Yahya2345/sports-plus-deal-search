@@ -9,6 +9,61 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// PO Number initials to email mapping
+const PO_INITIALS_TO_EMAIL = {
+  'JT': 'jim@sportsplusteam.com',
+  'JD': 'john@sportsplusteam.com',
+  'JP': 'sportsplus.john@gmail.com',
+  'JG': 'sportsplus.jim@gmail.com',
+  'BO': 'weoehm@comcast.net',
+  'KS': 'katie@sportsplusteam.com',
+  'MC': 'sportsplus.mac@gmail.com',
+  'SMR': 'coachsteve@sportsplusteam.com',
+  'SN': 'sportsplus.shawn@gmail.com',
+  'MA': 'mark@sportsplusteam.com',
+  'WA': 'wade@sportsplusteam.com'
+};
+
+/**
+ * Extract initials from PO number and build recipient list
+ * @param {string} poNumber - PO Number (e.g., "JG25-252", "SMR-123")
+ * @returns {string} Comma-separated email list
+ */
+function getEmailRecipients(poNumber) {
+  // Always include base recipients
+  const baseRecipients = process.env.EMAIL_TO || 'zaeemshahzad95@gmail.com, ken@sportsplusteam.com';
+  const recipients = baseRecipients.split(',').map(e => e.trim());
+  
+  if (!poNumber) return recipients.join(', ');
+  
+  // Extract initials (letters before first number or hyphen)
+  const initialsMatch = poNumber.match(/^([A-Z]+)/i);
+  if (!initialsMatch) return recipients.join(', ');
+  
+  const initials = initialsMatch[1].toUpperCase();
+  
+  // Check for exact match or check if PO starts with any key
+  let matchedEmail = PO_INITIALS_TO_EMAIL[initials];
+  
+  // If no exact match, try matching shorter initials (e.g., "JG" from "JG25")
+  if (!matchedEmail) {
+    for (const [key, email] of Object.entries(PO_INITIALS_TO_EMAIL)) {
+      if (initials.startsWith(key)) {
+        matchedEmail = email;
+        break;
+      }
+    }
+  }
+  
+  // Add matched email if found and not already in list
+  if (matchedEmail && !recipients.includes(matchedEmail)) {
+    recipients.push(matchedEmail);
+    console.log(`✉️ PO ${poNumber} initials "${initials}" matched to ${matchedEmail}`);
+  }
+  
+  return recipients.join(', ');
+}
+
 /**
  * Send email for incorrect line item
  * @param {object} lineItemData - Line item data with all columns A-S
@@ -63,7 +118,7 @@ async function sendIncorrectAlert(lineItemData) {
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO,
+      to: getEmailRecipients(po),
       subject: `⚠️ INCORRECT - PO: ${po} | Line Item #${liIndex}`,
       html: emailBody,
     };
@@ -131,7 +186,7 @@ async function sendMissingAlert(lineItemData) {
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO,
+      to: getEmailRecipients(po),
       subject: `🚨 MISSING - PO: ${po} | Line Item #${liIndex}`,
       html: emailBody,
     };
@@ -165,7 +220,7 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
       const qty = item['Quantity Shipped'] || '0';
       const asd = item['Actual Shipping Date'] || 'Not set';
       const notes = item['Inspection Notes'] || 'No notes';
-      return `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Line ${idx + 1}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${desc}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${status}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${qty}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${asd}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${inspector}</td></tr>`;
+      return `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Line ${idx + 1}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${desc}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${status}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${qty}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${asd}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${inspector}</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${notes}</td></tr>`;
     };
 
     const summary = allLineItems.map((item, idx) => summarize(item, idx)).join('');
@@ -200,6 +255,7 @@ ${newly || '<li>No newly flagged items</li>'}
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Qty</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Actual Shipping Date</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspector</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspection Notes</th>
 </tr>
 </thead>
 <tbody>
@@ -215,7 +271,7 @@ ${summary}
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO,
+      to: getEmailRecipients(poNumber),
       subject: `⚠️ PO ${poNumber} - Incorrect/Missing Digest`,
       html: emailBody,
     };
@@ -277,7 +333,7 @@ Sports Plus Inspection System
 
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO,
+      to: getEmailRecipients(poNumber),
       subject: `✅ ORDER COMPLETE - PO: ${poNumber}`,
       text: emailBody,
     };
