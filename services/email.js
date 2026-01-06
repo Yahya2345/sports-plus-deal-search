@@ -96,7 +96,7 @@ async function sendIncorrectAlert(lineItemData) {
 
 <h3>Inspection Details</h3>
 <p><strong>Inspector:</strong> ${inspector}</p>
-<p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
+<p><strong>Received Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
 <p><strong>Inspection Notes:</strong> ${notes}</p>
 <p><strong>Inspector Note:</strong> ${lineItemData['Inspector Note'] || 'No additional notes'}</p>
 <p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
@@ -164,7 +164,7 @@ async function sendMissingAlert(lineItemData) {
 
 <h3>Inspection Details</h3>
 <p><strong>Inspector:</strong> ${inspector}</p>
-<p><strong>Actual Shipping Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
+<p><strong>Received Date:</strong> ${lineItemData['Actual Shipping Date'] || 'Not set'}</p>
 <p><strong>Inspection Notes:</strong> ${notes}</p>
 <p><strong>Inspector Note:</strong> ${lineItemData['Inspector Note'] || 'No additional notes'}</p>
 <p><strong>Moved to Other Shelf:</strong> ${lineItemData['Moved to Other Shelf'] || 'Not set'}</p>
@@ -253,7 +253,7 @@ ${newly || '<li>No newly flagged items</li>'}
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Qty</th>
-<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Actual Shipping Date</th>
+<th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Received Date</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspector</th>
 <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Inspection Notes</th>
 </tr>
