@@ -1150,7 +1150,7 @@
               </div>
               <div class="invoice-summary" style="display: none; padding: 10px; background: #fafafa; border-bottom: 1px solid #eee;">
                 <div><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</div>
-                ${invoice['Tracking Number'] ? `<div><strong>Tracking Number:</strong> ${invoice['Tracking Number']}</div>` : ''}
+                <div><strong>Tracking Number:</strong> ${invoice['Tracking Number'] || ''}</div>
                 <div><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</div>
                 <div><strong>Line Items:</strong> ${invoice['Line Items Count']}</div>
               </div>
