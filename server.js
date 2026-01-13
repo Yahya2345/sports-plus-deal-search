@@ -21,6 +21,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 function hasRealLineItems(invoice) {
   if (!invoice || !invoice._lineItems || invoice._lineItems.length === 0) return false;
   const firstDesc = invoice._lineItems[0]?.description || '';
