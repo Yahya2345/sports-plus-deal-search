@@ -2,7 +2,7 @@
   "name": "sports-plus-deal-search",
   "version": "1.0.0",
   "description": "Sports Plus Deal Search with Line Items - Live Deal Search Portal",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
