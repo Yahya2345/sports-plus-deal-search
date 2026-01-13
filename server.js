@@ -7,7 +7,6 @@ const axios = require('axios');
 // Import our services
 const googleSheets = require('./services/googleSheets');
 const sportsInc = require('./services/sportsInc');
-const ocr = require('./services/ocr');
 const email = require('./services/email');
 
 const app = express();
