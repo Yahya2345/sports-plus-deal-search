@@ -4,6 +4,14 @@ const axios = require('axios');
 const SPORTSINC_API_URL = 'https://api.sportsinc.com';
 const SPORTSINC_API_KEY = process.env.SPORTSINC_API_KEY;
 
+// Debug: Log if API key is loaded
+if (!SPORTSINC_API_KEY) {
+  console.warn('⚠️ WARNING: SPORTSINC_API_KEY is not loaded from environment variables!');
+  console.warn('   Available env keys:', Object.keys(process.env).filter(k => k.includes('SPORTS')));
+} else {
+  console.log('✓ SPORTSINC_API_KEY loaded:', SPORTSINC_API_KEY.substring(0, 10) + '...');
+}
+
 // Sports Inc PDF URL pattern
 // NOTE: This URL requires authentication and will redirect unauthenticated requests
 const SPORTSINC_PDF_URL_BASE = 'https://swv2h.sportsinc.com/Member/InvoiceCenter/VendorInvoicePDF.aspx?q=';
