@@ -12,10 +12,6 @@ const email = require('./services/email');
 const app = express();
 const PORT = process.env.PORT || 8888;
 
-// HubSpot configuration
-const HUBSPOT_API_URL = 'https://api.hubapi.com';
-const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -106,187 +102,6 @@ app.post('/api/search', async (req, res) => {
       success: false,
       error: error.message
     });
-  }
-});
-
-// ========================================
-// HUBSPOT ENDPOINTS
-// ========================================
-
-/**
- * Search HubSpot deals by Sales Order Number
- */
-async function searchHubSpotDeals(query) {
-  try {
-    const response = await axios.post(
-      `${HUBSPOT_API_URL}/crm/v3/objects/deals/search`,
-      {
-        filterGroups: [{
-          filters: [{
-            propertyName: 'sales_order_',
-            operator: 'EQ',
-            value: query
-          }]
-        }],
-        properties: [], // Fetch all properties
-        limit: 100
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    return response.data.results || [];
-  } catch (error) {
-    console.error('HubSpot search error:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Get line items for a deal
- */
-app.post('/api/hubspot/lineItems', async (req, res) => {
-  try {
-    const { dealId } = req.body;
-
-    if (!dealId) {
-      return res.status(400).json({ error: 'dealId is required' });
-    }
-
-    // Get associations
-    const associationsResponse = await axios.get(
-      `${HUBSPOT_API_URL}/crm/v4/objects/deals/${dealId}/associations/line_items`,
-      {
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    // Handle both "line_items" and "line items" formats
-    const lineItemsData = associationsResponse.data.results || [];
-    const lineItemIds = lineItemsData.map(item => item.toObjectId);
-
-    if (lineItemIds.length === 0) {
-      return res.json({ lineItems: [] });
-    }
-
-    // Batch read line items
-    const lineItemsResponse = await axios.post(
-      `${HUBSPOT_API_URL}/crm/v3/objects/line_items/batch/read`,
-      {
-        properties: ['name', 'quantity', 'price', 'amount', 'description', 'actual_shipping_date'],
-        inputs: lineItemIds.map(id => ({ id }))
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    res.json({
-      lineItems: lineItemsResponse.data.results || []
-    });
-
-  } catch (error) {
-    console.error('Get line items error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Batch update HubSpot line items with Actual Shipping Date
- * Accepts: { updates: [{ id: string, actual_shipping_date: string | number | null }] }
- */
-app.post('/api/hubspot/lineItems/batchUpdate', async (req, res) => {
-  try {
-    const { updates } = req.body;
-
-    if (!Array.isArray(updates) || updates.length === 0) {
-      return res.status(400).json({ error: 'updates array is required' });
-    }
-
-    // Convert YYYY-MM-DD to epoch ms (start of day UTC) if needed
-    const toEpochMs = (val) => {
-      if (val === null || val === undefined || val === '') return null;
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        // If already numeric string
-        if (/^\d+$/.test(val)) return Number(val);
-        // Expecting YYYY-MM-DD
-        const d = new Date(val);
-        if (!isNaN(d.getTime())) return d.getTime();
-      }
-      return null;
-    };
-
-    const inputs = updates.map(u => ({
-      id: String(u.id),
-      properties: {
-        actual_shipping_date: toEpochMs(u.actual_shipping_date)
-      }
-    }));
-
-    const updateResponse = await axios.post(
-      `${HUBSPOT_API_URL}/crm/v3/objects/line_items/batch/update`,
-      { inputs },
-      {
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    res.json({ success: true, results: updateResponse.data.results || [] });
-  } catch (error) {
-    const msg = error.response?.data || error.message;
-    console.error('Batch update line items error:', msg);
-    res.status(500).json({ error: typeof msg === 'string' ? msg : JSON.stringify(msg) });
-  }
-});
-
-/**
- * Update a HubSpot deal property
- */
-app.post('/api/hubspot/updateDeal', async (req, res) => {
-  try {
-    const { dealId, propertyName, propertyValue } = req.body;
-
-    if (!dealId || !propertyName) {
-      return res.status(400).json({ error: 'dealId and propertyName are required' });
-    }
-
-    const updateResponse = await axios.patch(
-      `${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealId}`,
-      {
-        properties: {
-          [propertyName]: propertyValue
-        }
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    res.json({
-      success: true,
-      deal: updateResponse.data
-    });
-
-  } catch (error) {
-    console.error('Update deal error:', error.message);
-    res.status(500).json({ error: error.message });
   }
 });
 
@@ -536,10 +351,7 @@ process.on('unhandledRejection', (reason, promise) => {
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`\n📋 Available endpoints:`);
-  console.log(`   POST /api/search - Unified search (Invoice + HubSpot)`);
-  console.log(`   POST /api/hubspot/lineItems - Get deal line items`);
-  console.log(`   POST /api/hubspot/lineItems/batchUpdate - Update line items shipping dates`);
-  console.log(`   POST /api/hubspot/updateDeal - Update deal property`);
+  console.log(`   POST /api/search - Search invoices by PO Number`);
   console.log(`   POST /api/updateLineItemsBulk - Bulk update line items and send digest`);
   console.log(`   POST /api/updateLineItem - Update line item fields in Google Sheet`);
   console.log(`   GET  /api/testEmail - Test email service and send test email`);
@@ -547,7 +359,6 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`   POST /api/cache/refresh - Refresh cache for PO Number`);
   console.log(`\n✓ Google Sheets: ${process.env.GOOGLE_SHEETS_ID ? 'Configured' : 'NOT CONFIGURED'}`);
   console.log(`✓ Sports Inc API: ${process.env.SPORTSINC_API_KEY ? 'Configured' : 'NOT CONFIGURED'}`);
-  console.log(`✓ HubSpot API: ${process.env.HUBSPOT_ACCESS_TOKEN ? 'Configured' : 'NOT CONFIGURED'}`);
   console.log(`\n✅ Server is listening and ready for requests!\n`);
 });
 
