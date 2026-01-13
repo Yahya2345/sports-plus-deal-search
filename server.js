@@ -34,7 +34,7 @@ function hasRealLineItems(invoice) {
 /**
  * Main search endpoint that combines:
  * 1. Invoice data from Sports Inc (with Google Sheets caching)
- * 2. HubSpot deal data
+ * 2. Google Sheets cached data
  */
 app.post('/api/search', async (req, res) => {
   try {
@@ -72,12 +72,6 @@ app.post('/api/search', async (req, res) => {
         });
       }
     }
-    
-    // Get HubSpot deal data
-    const hubspotDeals = await searchHubSpotDeals(query).catch(err => {
-      console.error('HubSpot fetch error:', err.message);
-      return [];
-    });
 
     // Best-effort: save SI invoice line items to Google Sheet (non-blocking)
     try {
@@ -87,12 +81,11 @@ app.post('/api/search', async (req, res) => {
       console.warn('Google Sheet save skipped:', sheetErr.message);
     }
 
-    // Return combined results with all invoices
+    // Return results with all invoices and cached data
     res.json({
       success: true,
       query,
       invoices: invoices, // Array of all invoices
-      deals: hubspotDeals,
       timestamp: new Date().toISOString()
     });
 
