@@ -184,9 +184,60 @@ app.get('/api/testEmail', async (req, res) => {
 });
 
 /**
+ * POST /api/checkAndSendAlerts
+ * Check for flagged items and send email alerts after all updates are complete
+ */
+app.post('/api/checkAndSendAlerts', async (req, res) => {
+  try {
+    const { poNumber } = req.body;
+    console.log(`📧 /api/checkAndSendAlerts called: PO=${poNumber}`);
+
+    if (!poNumber) {
+      return res.status(400).json({ error: 'poNumber is required' });
+    }
+
+    // Get all current line items for this PO
+    const allItems = await googleSheets.getLineItemsForPO(poNumber);
+    
+    // Find all items with Incorrect or Missing status
+    const flaggedItems = allItems.filter(item => {
+      const status = (item['Inspection Status'] || '').trim();
+      return status === 'Incorrect' || status === 'Missing';
+    });
+
+    console.log(`📧 Email check for PO ${poNumber}: flaggedItems=${flaggedItems.length}, total items=${allItems.length}`);
+    console.log(`📧 Flagged statuses: ${flaggedItems.map(i => i['Inspection Status']).join(', ')}`);
+
+    let digestSent = false;
+    if (flaggedItems.length > 0) {
+      const recipients = email.getEmailRecipients ? email.getEmailRecipients(poNumber) : [];
+      console.log(`📧 Sending digest email for ${flaggedItems.length} flagged items to: ${recipients.join(', ')}`);
+      digestSent = await email.sendStatusDigest(poNumber, allItems, flaggedItems);
+    }
+
+    let completionEmailSent = false;
+    const poCompletion = await googleSheets.checkPOCompletion(poNumber);
+    if (poCompletion.allComplete && poCompletion.lineItems.length > 0) {
+      console.log(`📧 PO ${poNumber} is complete, sending completion email`);
+      completionEmailSent = await email.sendPOCompletionEmail(poNumber, poCompletion.lineItems);
+    }
+
+    res.json({
+      success: true,
+      digestSent,
+      completionEmailSent,
+      flaggedCount: flaggedItems.length
+    });
+  } catch (error) {
+    console.error('Check alerts error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Update line item fields in Google Sheet
- * POST /api/updateLineItem
- * Body: { poNumber, siDocNumber, lineItemIndex, updates: { fieldName: value, ... } }
+ * POST /api/updateLineItemsBulk
+ * Body: { poNumber, siDocNumber, updates: [{ lineItemIndex, updates: {...} }] }
  */
 app.post('/api/updateLineItemsBulk', async (req, res) => {
   try {
@@ -215,35 +266,9 @@ app.post('/api/updateLineItemsBulk', async (req, res) => {
 
     console.log(`✅ Bulk update complete: ${updatedCount} line items updated in Google Sheets`);
 
-    // Fetch post-update data AFTER all updates are done
-    const afterItems = await googleSheets.getLineItemsForPO(poNumber);
-    const newlyFlagged = afterItems.filter(item => {
-      const key = `${item['PO Number']}|${item['SI Doc Number']}|${item['Line Item Index']}`;
-      const prev = statusBefore.get(key) || '';
-      const curr = (item['Inspection Status'] || '').trim();
-      // Check for Incorrect or Missing status (not Incomplete/Defective)
-      return (curr === 'Incorrect' || curr === 'Missing') && curr !== prev;
-    });
-
-    console.log(`📧 Email check: newlyFlagged=${newlyFlagged.length}, statuses: ${newlyFlagged.map(i => i['Inspection Status']).join(', ')}`);
-
-    let digestSent = false;
-    if (newlyFlagged.length > 0) {
-      console.log(`📧 Sending digest email to: ${email.getEmailRecipients ? 'dynamic recipients' : 'default recipients'}`);
-      digestSent = await email.sendStatusDigest(poNumber, afterItems, newlyFlagged);
-    }
-
-    let completionEmailSent = false;
-    const poCompletion = await googleSheets.checkPOCompletion(poNumber);
-    if (poCompletion.allComplete && poCompletion.lineItems.length > 0) {
-      completionEmailSent = await email.sendPOCompletionEmail(poNumber, poCompletion.lineItems);
-    }
-
     res.json({
       success: true,
-      updated: updatedCount,
-      digestSent,
-      completionEmailSent,
+      updated: updatedCount
     });
   } catch (error) {
     console.error('Bulk update error:', error.message);

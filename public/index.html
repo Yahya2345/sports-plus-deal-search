@@ -1357,6 +1357,7 @@
       btn.disabled = true;
 
       try {
+        // Step 1: Update all line items first
         for (const p of payloads) {
           const resp = await fetch('/api/updateLineItemsBulk', {
             method: 'POST',
@@ -1368,6 +1369,17 @@
             throw new Error(errData.error || `Save failed (${resp.status})`);
           }
         }
+        
+        // Step 2: After ALL updates complete, check and send alerts for each unique PO
+        const uniquePOs = [...new Set(payloads.map(p => p.poNumber))];
+        for (const poNumber of uniquePOs) {
+          await fetch('/api/checkAndSendAlerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ poNumber })
+          });
+        }
+        
         if (statusEl) statusEl.textContent = '✅ Saved';
         setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
       } catch (err) {
