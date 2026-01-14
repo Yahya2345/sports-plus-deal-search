@@ -299,7 +299,7 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
     const emailBody = `
 <html>
 <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-<h2 style="color: #ff6b35;">INSPECTION ALERT DIGEST</h2>
+<h2 style="color: #ff6b35;">⚠️ INSPECTION ALERT DIGEST</h2>
 
 <p><strong>PO Number:</strong> <strong style="font-size: 1.2em;">${poNumber}</strong></p>
 <p><strong>Supplier:</strong> ${supplier}</p>
@@ -337,7 +337,7 @@ ${summary}
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
       to: getEmailRecipients(poNumber),
-      subject: `⚠️ PO ${poNumber} - Incorrect/Missing Digest`,
+      subject: `⚠️ PO ${poNumber} - Incorrect/Missing Items Alert`,
       html: emailBody,
     };
 

@@ -223,8 +223,11 @@ app.post('/api/updateLineItemsBulk', async (req, res) => {
       const key = `${item['PO Number']}|${item['SI Doc Number']}|${item['Line Item Index']}`;
       const prev = statusBefore.get(key) || '';
       const curr = (item['Inspection Status'] || '').trim();
-      return (curr === 'Incomplete' || curr === 'Defective') && curr !== prev;
+      // Check for Incorrect or Missing status (not Incomplete/Defective)
+      return (curr === 'Incorrect' || curr === 'Missing') && curr !== prev;
     });
+
+    console.log(`📧 Email check: newlyFlagged=${newlyFlagged.length}, statuses: ${newlyFlagged.map(i => i['Inspection Status']).join(', ')}`);
 
     let digestSent = false;
     if (newlyFlagged.length > 0) {
