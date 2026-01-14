@@ -191,6 +191,7 @@ app.get('/api/testEmail', async (req, res) => {
 app.post('/api/updateLineItemsBulk', async (req, res) => {
   try {
     const { poNumber, siDocNumber, updates } = req.body;
+    console.log(`🔵 /api/updateLineItemsBulk called: PO=${poNumber}, SIDoc=${siDocNumber}, updates count=${updates?.length || 0}`);
 
     if (!poNumber || !siDocNumber || !Array.isArray(updates) || updates.length === 0) {
       return res.status(400).json({ error: 'poNumber, siDocNumber, and updates array are required' });
