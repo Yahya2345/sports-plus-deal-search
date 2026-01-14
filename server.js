@@ -210,8 +210,8 @@ app.post('/api/checkAndSendAlerts', async (req, res) => {
 
     let digestSent = false;
     if (flaggedItems.length > 0) {
-      const recipients = email.getEmailRecipients ? email.getEmailRecipients(poNumber) : [];
-      console.log(`📧 Sending digest email for ${flaggedItems.length} flagged items to: ${recipients.join(', ')}`);
+      const recipients = email.getEmailRecipients ? email.getEmailRecipients(poNumber) : 'default recipients';
+      console.log(`📧 Sending digest email for ${flaggedItems.length} flagged items to: ${recipients}`);
       digestSent = await email.sendStatusDigest(poNumber, allItems, flaggedItems);
     }
 
