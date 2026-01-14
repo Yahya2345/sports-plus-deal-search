@@ -275,6 +275,9 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
       return false;
     }
 
+    const recipients = getEmailRecipients(poNumber);
+    console.log(`📧 Email will be sent to: ${recipients}`);
+
     const supplier = allLineItems[0]['Supplier Name'] || 'Unknown';
     const siDoc = allLineItems[0]['SI Doc Number'] || 'N/A';
 
@@ -434,4 +437,5 @@ module.exports = {
   sendStatusDigest,
   sendPOCompletionEmail,
   testEmailConnection,
+  getEmailRecipients,
 };

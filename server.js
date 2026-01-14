@@ -205,19 +205,17 @@ app.post('/api/updateLineItemsBulk', async (req, res) => {
       statusBefore.set(key, (item['Inspection Status'] || '').trim());
     });
 
-    let updatedCount = 0;
-    for (const upd of updates) {
-      if (!upd || !upd.lineItemIndex || !upd.updates) continue;
-      const ok = await googleSheets.updateLineItemInSheet(
-        poNumber,
-        siDocNumber,
-        Number(upd.lineItemIndex),
-        upd.updates
-      );
-      if (ok) updatedCount += 1;
-    }
+    // Use BULK update for speed (single read + batch write instead of loop)
+    console.log(`⚡ Using bulk update for ${updates.length} line items`);
+    const updatedCount = await googleSheets.updateLineItemsBulkInSheet(
+      poNumber,
+      siDocNumber,
+      updates
+    );
 
-    // Fetch post-update data
+    console.log(`✅ Bulk update complete: ${updatedCount} line items updated in Google Sheets`);
+
+    // Fetch post-update data AFTER all updates are done
     const afterItems = await googleSheets.getLineItemsForPO(poNumber);
     const newlyFlagged = afterItems.filter(item => {
       const key = `${item['PO Number']}|${item['SI Doc Number']}|${item['Line Item Index']}`;
@@ -231,6 +229,7 @@ app.post('/api/updateLineItemsBulk', async (req, res) => {
 
     let digestSent = false;
     if (newlyFlagged.length > 0) {
+      console.log(`📧 Sending digest email to: ${email.getEmailRecipients ? 'dynamic recipients' : 'default recipients'}`);
       digestSent = await email.sendStatusDigest(poNumber, afterItems, newlyFlagged);
     }
 
