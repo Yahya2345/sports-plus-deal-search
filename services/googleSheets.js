@@ -223,6 +223,11 @@ module.exports = {
   updateLineItemInSheet: async function updateLineItemInSheet(poNumber, siDocNumber, lineItemIndex, updates) {
     try {
       const sheets = getGoogleSheetsClient();
+      
+      // Normalize inputs
+      poNumber = (poNumber || '').trim();
+      siDocNumber = String(siDocNumber || '').trim();
+      lineItemIndex = Number(lineItemIndex);
 
       // Get all rows to find the target
       const resp = await sheets.spreadsheets.values.get({
@@ -254,15 +259,21 @@ module.exports = {
       let targetRowIndex = -1;
 
       // Find row matching PO + SI Doc + Line Item Index
+      console.log(`DEBUG updateLineItem: Looking for PO="${poNumber}", SIDoc="${siDocNumber}", Idx=${lineItemIndex}`);
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const rowPO = (row[headers.indexOf('PO Number')] || '').trim();
-        const rowSIDoc = (row[headers.indexOf('SI Doc Number')] || '').trim();
+        const rowSIDoc = String(row[headers.indexOf('SI Doc Number')] || '').trim();
         const rowIdxRaw = (row[headers.indexOf('Line Item Index')] || '').toString().trim();
         const rowIdxNum = parseInt(rowIdxRaw, 10);
 
-        if (rowPO === poNumber && rowSIDoc === siDocNumber && rowIdxNum === Number(lineItemIndex)) {
+        if (rowPO === poNumber) {
+          console.log(`  Row ${i + 1}: rowPO="${rowPO}" rowSIDoc="${rowSIDoc}" rowIdx=${rowIdxNum}`);
+        }
+
+        if (rowPO === poNumber && rowSIDoc === siDocNumber && rowIdxNum === lineItemIndex) {
           targetRowIndex = i + 1; // Google Sheets uses 1-based row numbers
+          console.log(`  ✓ Found match at row ${targetRowIndex}`);
           break;
         }
       }
