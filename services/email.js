@@ -271,12 +271,13 @@ async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) 
   try {
     console.log(`📧 sendStatusDigest called: PO=${poNumber}, allLineItems=${allLineItems.length}, newlyFlagged=${newlyFlagged.length}`);
     if (!allLineItems.length) {
-      console.log('No line items provided, skipping email');
+      console.log('❌ No line items provided, skipping email');
       return false;
     }
 
     const recipients = getEmailRecipients(poNumber);
     console.log(`📧 Email will be sent to: ${recipients}`);
+    console.log(`📧 Attempting to send email via transporter...`);
 
     const supplier = allLineItems[0]['Supplier Name'] || 'Unknown';
     const siDoc = allLineItems[0]['SI Doc Number'] || 'N/A';
@@ -345,10 +346,11 @@ ${summary}
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Status Digest Email Sent: ${info.messageId}`);
+    console.log(`✉️ Status Digest Email Sent successfully! MessageID: ${info.messageId}`);
     return true;
   } catch (error) {
     console.error('❌ Error sending status digest email:', error.message);
+    console.error('❌ Stack trace:', error.stack);
     return false;
   }
 }
