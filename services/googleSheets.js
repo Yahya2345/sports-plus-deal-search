@@ -350,13 +350,17 @@ module.exports = {
 
       // Build lookup: key = PO|SI|Idx -> row number
       const rowLookup = new Map();
+      console.log(`DEBUG bulkUpdate: Available headers: ${JSON.stringify(headers)}`);
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const rowPO = (row[headers.indexOf('PO Number')] || '').trim();
-        const rowSIDoc = (row[headers.indexOf('SI Doc Number')] || '').trim();
+        const rowSIDoc = String(row[headers.indexOf('SI Doc Number')] || '').trim();
         const rowIdxRaw = (row[headers.indexOf('Line Item Index')] || '').toString().trim();
         const rowIdxNum = parseInt(rowIdxRaw, 10);
         const key = `${rowPO}|${rowSIDoc}|${rowIdxNum}`;
+        if (rowPO && rowPO === poNumber) {
+          console.log(`DEBUG bulkUpdate Row ${i + 1}: PO="${rowPO}" SIDoc="${rowSIDoc}" Idx=${rowIdxNum} key="${key}"`);
+        }
         rowLookup.set(key, { rowNumber: i + 1, existingRow: row });
       }
 
@@ -366,9 +370,10 @@ module.exports = {
       for (const upd of updatesArr) {
         if (!upd || !upd.lineItemIndex || !upd.updates) continue;
         const key = `${poNumber}|${siDocNumber}|${Number(upd.lineItemIndex)}`;
+        console.log(`DEBUG bulkUpdate: Searching for key: "${key}"`);
         const found = rowLookup.get(key);
         if (!found) {
-          console.log(`Line item not found for bulk update: ${key}`);
+          console.log(`Line item not found for bulk update: ${key}. Available keys: ${Array.from(rowLookup.keys()).filter(k => k.startsWith(poNumber)).slice(0, 10).join(', ')}`);
           continue;
         }
 
@@ -485,7 +490,7 @@ module.exports = {
 
     for (const inv of invoices || []) {
       const invPO = inv['PO Number'] || poNumber;
-      const siDoc = inv['SI Doc Number'] || '';
+      const siDoc = String(inv['SI Doc Number'] || '').trim(); // Ensure it's a trimmed string
       const siDocDate = inv['SI Doc Date'] || '';
       const supplierName = inv['Supplier'] || inv['Supplier Name'] || '';
       const shipDate = inv['Ship Date'] || '';
@@ -547,6 +552,7 @@ module.exports = {
       lineItems.forEach((li, idx) => {
         const lineItemIndex = idx + 1;
         const key = `${invPO}|${siDoc}|${lineItemIndex}`;
+        console.log(`DEBUG saveLineItems: Writing key "${key}" (PO=${invPO}, SIDoc="${siDoc}", Idx=${lineItemIndex})`);
 
         const qty = li.quantityShipped ?? li.quantityOrdered ?? '';
         const price = li.netPrice ?? li.listPrice ?? 0;
