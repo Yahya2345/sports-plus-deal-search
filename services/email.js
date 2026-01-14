@@ -210,6 +210,58 @@ async function sendMissingAlert(lineItemData) {
 }
 
 /**
+ * Send email for incomplete line item
+ * @param {object} lineItemData - Line item data with all columns A-S
+ */
+async function sendIncompleteAlert(lineItemData) {
+  try {
+    const po = lineItemData['PO Number'] || 'N/A';
+    const siDoc = lineItemData['SI Doc Number'] || 'N/A';
+    const itemDesc = lineItemData['Item Description'] || 'Unnamed Item';
+    const liIndex = lineItemData['Line Item Index'] || 'N/A';
+    const inspector = lineItemData['Inspector'] || 'Not assigned';
+    const notes = lineItemData['Inspection Notes'] || 'No notes';
+
+    const emailBody = `
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2 style="color: #ffc107;">INSPECTION STATUS: INCOMPLETE</h2>
+
+<p><strong>PO Number:</strong> <strong style="font-size: 1.1em;">${po}</strong></p>
+<p><strong>SI Doc Number:</strong> ${siDoc}</p>
+<p><strong>Line Item Index:</strong> <strong style="font-size: 1.1em;">${liIndex}</strong></p>
+<p><strong>Item Description:</strong> ${itemDesc}</p>
+
+<h3>Inspection Details</h3>
+<p><strong>Inspector:</strong> ${inspector}</p>
+<p><strong>Inspection Notes:</strong> ${notes}</p>
+
+<p style="color: #ffc107; font-weight: bold;">⚠️ ACTION REQUIRED: This line item is marked as incomplete.</p>
+<p><em>Last Updated: ${lineItemData['Last Updated'] || new Date().toISOString()}</em></p>
+
+<hr>
+<p><em>Sports Plus Inspection System</em></p>
+</body>
+</html>
+    `;
+
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
+      to: getEmailRecipients(po),
+      subject: `⚠️ INCOMPLETE - PO: ${po} | Line Item #${liIndex}`,
+      html: emailBody,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✉️ Incomplete Alert Email Sent: ${info.messageId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending incomplete alert email:', error.message);
+    return false;
+  }
+}
+
+/**
  * Send aggregated status digest for Incorrect/Missing line items
  * @param {string} poNumber
  * @param {Array<Object>} allLineItems - all line items for the PO (post-update)
@@ -378,6 +430,7 @@ async function testEmailConnection() {
 module.exports = {
   sendIncorrectAlert,
   sendMissingAlert,
+  sendIncompleteAlert,
   sendStatusDigest,
   sendPOCompletionEmail,
   testEmailConnection,
