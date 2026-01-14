@@ -9,6 +9,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Test connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email transporter error:', error.message);
+  } else {
+    console.log('✅ Email transporter ready. USER:', process.env.EMAIL_USER);
+  }
+});
+
 // PO Number initials to email mapping
 const PO_INITIALS_TO_EMAIL = {
   'JT': 'jim@sportsplusteam.com',
@@ -208,7 +217,11 @@ async function sendMissingAlert(lineItemData) {
  */
 async function sendStatusDigest(poNumber, allLineItems = [], newlyFlagged = []) {
   try {
-    if (!allLineItems.length) return false;
+    console.log(`📧 sendStatusDigest called: PO=${poNumber}, allLineItems=${allLineItems.length}, newlyFlagged=${newlyFlagged.length}`);
+    if (!allLineItems.length) {
+      console.log('No line items provided, skipping email');
+      return false;
+    }
 
     const supplier = allLineItems[0]['Supplier Name'] || 'Unknown';
     const siDoc = allLineItems[0]['SI Doc Number'] || 'N/A';
@@ -292,6 +305,7 @@ ${summary}
  */
 async function sendPOCompletionEmail(poNumber, allLineItems) {
   try {
+    console.log(`📧 sendPOCompletionEmail called: PO=${poNumber}, lineItems=${allLineItems?.length || 0}`);
     if (!allLineItems || allLineItems.length === 0) {
       console.log('No line items to include in completion email');
       return false;
