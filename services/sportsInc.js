@@ -33,6 +33,17 @@ function findPdfUrl(doc) {
 }
 
 /**
+ * Normalize a PO number: uppercase and remove spaces/dashes
+ * @param {string} value
+ * @returns {string}
+ */
+function normalizePO(value) {
+  return String(value || '')
+    .toUpperCase()
+    .replace(/[\s-]+/g, '');
+}
+
+/**
  * Get invoice data from Sports Inc Tool API by PO Number
  * @param {string} poNumber - PO Number to search for
  * @param {boolean} activeOnly - If true, fetch only active; if false, fetch historical
@@ -329,6 +340,105 @@ async function getAllInvoices(poNumber) {
 }
 
 /**
+ * Fetch invoices by PO prefix (first N chars). Filters results server-side to start-with.
+ * @param {string} poPrefix - First 7 characters (letters/numbers) of the PO
+ * @param {number} [prefixLen=7]
+ * @returns {Array} Array of invoices found whose PO starts with the prefix
+ */
+async function getInvoicesByPrefix(poPrefix, prefixLen = 7) {
+  try {
+    if (!SPORTSINC_API_KEY) {
+      throw new Error('SPORTSINC_API_KEY is not configured');
+    }
+
+    const norm = normalizePO(poPrefix);
+    const prefix = norm.slice(0, prefixLen);
+    if (!prefix) return [];
+
+    console.log(`Fetching invoices by prefix from Sports Inc: prefix="${prefix}" (len=${prefixLen})`);
+
+    const response = await axios.get(`${SPORTSINC_API_URL}/dealers/documents/`, {
+      params: {
+        poNumber: prefix,
+        lines: true,
+        page: 1,
+        pageSize: 500
+      },
+      headers: {
+        'X-API-KEY': SPORTSINC_API_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const items = (response.data && response.data.items) ? response.data.items : [];
+    const filtered = items.filter(doc => normalizePO(doc.poNumber || '').startsWith(prefix));
+    console.log(`Prefix match found ${filtered.length} of ${items.length} returned items`);
+
+    const invoices = filtered.map(doc => ({
+      'PO Number': doc.poNumber || prefix,
+      'SI Doc Number': doc.siDocNumber || '',
+      'SI Doc Date': doc.siDocDate || '',
+      'Supplier Doc Number': doc.supplierDocNumber || '',
+      'Supplier Doc Date': doc.supplierDocDate || '',
+      'Supplier': doc.supplier || '',
+      'Due Date': doc.dueDate || '',
+      'Discount Date': doc.discountDate || '',
+      'Ship Date': doc.shipDate || '',
+      'Requested Ship Date': doc.requestedShipDate || '',
+      'Merchandise Total': doc.merchandiseTotal || 0,
+      'Freight Amount': doc.freightAmount || 0,
+      'Discount Amount': doc.discountAmount || 0,
+      'Sales Tax': doc.salesTax || 0,
+      'Excise Tax': doc.exciseTax || 0,
+      'SI Upcharge': doc.siUpcharge || 0,
+      'Service/Handling Charge': doc.svcHandleCharge || 0,
+      'Document Total': doc.docTotal || 0,
+      'Is Credit': doc.isCredit ? 'Yes' : 'No',
+      'Terms of Payment': doc.termsOfPayment || '',
+      'Terms of Delivery': doc.termsOfDelivery || '',
+      'Carrier': doc.carrier || '',
+      'Weight (LB)': doc.weight || '',
+      'Tracking Number': doc.trackingNumber || '',
+      'Method of Payment': doc.methodOfPayment || '',
+      'Freight Allowance': doc.freightAllowance || 0,
+
+      'Ship To Name': doc.shippingAddress?.name || '',
+      'Ship To Address': doc.shippingAddress?.address1 || '',
+      'Ship To Address 2': doc.shippingAddress?.address2 || '',
+      'Ship To City': doc.shippingAddress?.city || '',
+      'Ship To State': doc.shippingAddress?.state || '',
+      'Ship To Zip': doc.shippingAddress?.zipcode || '',
+
+      'Supplier Address': doc.supplierAddress?.address1 || '',
+      'Supplier Address 2': doc.supplierAddress?.address2 || '',
+      'Supplier City': doc.supplierAddress?.city || '',
+      'Supplier State': doc.supplierAddress?.state || '',
+      'Supplier Zip': doc.supplierAddress?.zipcode || '',
+      'Supplier Phone': doc.supplierAddress?.phoneNumber || '',
+      'Supplier Fax': doc.supplierAddress?.faxNumber || '',
+
+      'Line Items Count': doc.lines?.length || 0,
+      '_pdfUrl': findPdfUrl(doc),
+      '_lineItems': doc.lines || [],
+      'Status': doc.active ? 'Active' : 'Historical'
+    }));
+
+    return invoices;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.log(`Invoices not found in Sports Inc for prefix ${poPrefix}`);
+      return [];
+    }
+    if (error.response?.status === 401) {
+      console.error('❌ Sports Inc API authentication failed - check your API key');
+      throw new Error('Sports Inc API authentication failed');
+    }
+    console.error('❌ Error fetching from Sports Inc (prefix):', error.message);
+    throw error;
+  }
+}
+
+/**
  * Fetch both active and historical invoices in parallel
  * @param {string} poNumber - PO Number to search for
  * @returns {Object} { active, historical }
@@ -352,4 +462,5 @@ module.exports = {
   getInvoiceWithCache,
   getInvoicesBoth,
   getAllInvoices,
+  getInvoicesByPrefix,
 };
