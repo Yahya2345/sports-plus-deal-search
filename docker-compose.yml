@@ -1,20 +1,26 @@
 version: '3.8'
 
 services:
-  # Sports Plus API (Frontend + Backend)
   sports-plus-api:
     build: .
     container_name: sports-plus-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
     networks:
-      - app-network
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sportsplus.rule=Host(`sportsplus-recieving-portal.growlyze.cloud`)
+      - traefik.http.routers.sportsplus.tls=true
+      - traefik.http.routers.sportsplus.entrypoints=web,websecure
+      - traefik.http.routers.sportsplus.tls.certresolver=mytlschallenge
+      - traefik.http.services.sportsplus.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
@@ -23,5 +29,5 @@ services:
       start_period: 40s
 
 networks:
-  app-network:
-    driver: bridge
+  traefik-public:
+    external: true
