@@ -152,6 +152,56 @@ app.post('/api/cache/refresh', async (req, res) => {
 });
 
 /**
+ * POST /api/updateTrackingNumber
+ * Update tracking number for all line items of a specific invoice
+ */
+app.post('/api/updateTrackingNumber', async (req, res) => {
+  try {
+    const { poNumber, siDocNumber, trackingNumber } = req.body;
+    
+    if (!poNumber || !siDocNumber) {
+      return res.status(400).json({ error: 'poNumber and siDocNumber are required' });
+    }
+
+    console.log(`📦 Updating tracking number for PO: ${poNumber}, SI Doc: ${siDocNumber}, Tracking: ${trackingNumber}`);
+
+    // Get all line items for this specific invoice
+    const allItems = await googleSheets.getLineItemsForPO(poNumber);
+    const invoiceItems = allItems.filter(item => 
+      item['SI Doc Number'] === siDocNumber
+    );
+
+    if (invoiceItems.length === 0) {
+      return res.status(404).json({ error: 'No line items found for this invoice' });
+    }
+
+    // Update tracking number for all line items of this invoice
+    const updates = invoiceItems.map((item, idx) => ({
+      lineItemIndex: item['Line Item Index'] || (idx + 1),
+      updates: { 'Tracking Number': trackingNumber }
+    }));
+
+    const updatedCount = await googleSheets.updateLineItemsBulkInSheet(
+      poNumber,
+      siDocNumber,
+      updates
+    );
+
+    console.log(`✅ Updated tracking number for ${updatedCount} line items`);
+
+    res.json({
+      success: true,
+      updated: updatedCount,
+      message: `Tracking number updated for ${updatedCount} line items`
+    });
+
+  } catch (error) {
+    console.error('Update tracking number error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Test email service
  * GET /api/testEmail
  */
@@ -375,6 +425,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`   POST /api/search - Search invoices by PO Number`);
   console.log(`   POST /api/updateLineItemsBulk - Bulk update line items and send digest`);
   console.log(`   POST /api/updateLineItem - Update line item fields in Google Sheet`);
+  console.log(`   POST /api/updateTrackingNumber - Update tracking number for all line items of an invoice`);
   console.log(`   GET  /api/testEmail - Test email service and send test email`);
   console.log(`   GET  /api/cache/invoices - Get all cached invoices`);
   console.log(`   POST /api/cache/refresh - Refresh cache for PO Number`);

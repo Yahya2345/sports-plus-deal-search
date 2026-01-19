@@ -1148,11 +1148,22 @@
                 </div>
                 <span class="expand-icon" style="font-size: 18px; transition: transform 0.3s; cursor: pointer;">▶</span>
               </div>
-              <div class="invoice-summary" style="display: none; padding: 10px; background: #fafafa; border-bottom: 1px solid #eee;">
-                <div><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</div>
-                <div><strong>Tracking Number:</strong> ${invoice['Tracking Number'] || ''}</div>
-                <div><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</div>
-                <div><strong>Line Items:</strong> ${invoice['Line Items Count']}</div>
+              <div class="invoice-summary" style="display: none;">
+                <div style="display: flex; gap: 25px; align-items: center; flex-wrap: wrap; padding: 10px; background: #fafafa; border-bottom: 1px solid #eee;">
+                  <span style="white-space: nowrap;"><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</span>
+                  <span style="white-space: nowrap;"><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</span>
+                  <span style="white-space: nowrap;"><strong>Line Items:</strong> ${invoice['Line Items Count']}</span>
+                  <span style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <strong>Tracking Number:</strong> 
+                    <input type="text" 
+                           class="tracking-number-input" 
+                           data-po="${invoice['PO Number']}" 
+                           data-si-doc="${invoice['SI Doc Number']}" 
+                           value="${invoice['Tracking Number'] || ''}" 
+                           placeholder="Enter tracking #" 
+                           style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; width: 150px;">
+                  </span>
+                </div>
               </div>
               <div class="invoice-detail" style="display: none;">
                 ${hasRealLineItems ? renderSiLineItems(invoice._lineItems, invoice) : '<div class="no-line-items">Line items not available (scanned document)</div>'}
@@ -1291,6 +1302,7 @@
 
       const statusEl = document.getElementById('save-all-status');
       const fields = resultsDiv.querySelectorAll('.editable-field');
+      const trackingFields = resultsDiv.querySelectorAll('.tracking-number-input');
       const poDate = document.getElementById('poActualShippingDate')?.value || '';
       const poInspector = document.getElementById('poInspector')?.value || '';
 
@@ -1330,6 +1342,24 @@
         const bucket = grouped.get(key);
         if (!bucket.updatesMap.has(liIdx)) bucket.updatesMap.set(liIdx, { lineItemIndex: Number(liIdx), updates: {} });
         bucket.updatesMap.get(liIdx).updates[fieldName] = val;
+      });
+
+      // Apply tracking numbers to all line items of each invoice
+      trackingFields.forEach(field => {
+        const poNumber = field.dataset.po;
+        const siDocNumber = field.dataset.siDoc;
+        const trackingNumber = field.value.trim();
+        
+        if (!poNumber || !siDocNumber) return;
+        
+        const key = `${poNumber}|${siDocNumber}`;
+        if (grouped.has(key)) {
+          const bucket = grouped.get(key);
+          // Apply tracking number to all line items of this invoice
+          bucket.updatesMap.forEach(u => {
+            u.updates['Tracking Number'] = trackingNumber;
+          });
+        }
       });
 
       // Apply header-level Actual Shipping Date and Inspector to every line item bucket
@@ -1387,6 +1417,43 @@
         if (statusEl) statusEl.textContent = `⚠️ ${err.message}`;
       } finally {
         btn.disabled = false;
+      }
+    });
+
+    // Auto-save tracking number on blur or Enter key
+    resultsDiv.addEventListener('blur', async (e) => {
+      if (!e.target.classList.contains('tracking-number-input')) return;
+      
+      const input = e.target;
+      const poNumber = input.dataset.po;
+      const siDocNumber = input.dataset.siDoc;
+      const trackingNumber = input.value.trim();
+      
+      console.log(`💾 Saving tracking number for PO: ${poNumber}, SI Doc: ${siDocNumber}`);
+      
+      try {
+        const resp = await fetch('/api/updateTrackingNumber', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ poNumber, siDocNumber, trackingNumber })
+        });
+        
+        if (resp.ok) {
+          input.style.borderColor = '#4caf50';
+          setTimeout(() => { input.style.borderColor = '#ddd'; }, 1000);
+        } else {
+          throw new Error('Save failed');
+        }
+      } catch (err) {
+        console.error('Tracking number save error:', err);
+        input.style.borderColor = '#f44336';
+        setTimeout(() => { input.style.borderColor = '#ddd'; }, 2000);
+      }
+    }, true);
+
+    resultsDiv.addEventListener('keypress', (e) => {
+      if (e.target.classList.contains('tracking-number-input') && e.key === 'Enter') {
+        e.target.blur();
       }
     });
 

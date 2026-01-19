@@ -232,19 +232,19 @@ module.exports = {
       // Get all rows to find the target
       const resp = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
       });
 
       const rows = resp.data.values || [];
       if (rows.length === 0) return false;
 
       let headers = rows[0];
-      // Ensure extended headers (A–U) exist so we can update Q (Inspection Status)
+      // Ensure extended headers (A–T) exist so we can update Q (Inspection Status) and T (Tracking Number)
       const expectedHeaders = [
         'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
         'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
         'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
-        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
+        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf', 'Tracking Number'
       ];
       const headersMissingExtended = headers.length < expectedHeaders.length || expectedHeaders.some(h => !headers.includes(h));
       if (headersMissingExtended) {
@@ -303,7 +303,7 @@ module.exports = {
       // Write back to sheet
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A${targetRowIndex}:S${targetRowIndex}`,
+        range: `${SHEET_NAME}!A${targetRowIndex}:T${targetRowIndex}`,
         valueInputOption: 'RAW',
         resource: { values: [updateRow] },
       });
@@ -333,7 +333,7 @@ module.exports = {
       // Single read of headers + all rows for this sheet range
       const resp = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
       });
 
       const rows = resp.data.values || [];
@@ -344,7 +344,7 @@ module.exports = {
         'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
         'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
         'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
-        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
+        'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf', 'Tracking Number'
       ];
 
       // Ensure headers
@@ -407,7 +407,7 @@ module.exports = {
         if (lastUpdatedIdx >= 0) updateRow[lastUpdatedIdx] = nowIso;
 
         data.push({
-          range: `${SHEET_NAME}!A${found.rowNumber}:S${found.rowNumber}`,
+          range: `${SHEET_NAME}!A${found.rowNumber}:T${found.rowNumber}`,
           values: [updateRow]
         });
       }
@@ -635,7 +635,7 @@ module.exports = {
     if (rowsToAppend.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
         valueInputOption: 'RAW',
         insertDataOption: 'INSERT_ROWS',
         resource: { values: rowsToAppend },
@@ -661,7 +661,7 @@ module.exports = {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
       });
 
       const rows = response.data.values || [];
@@ -705,7 +705,7 @@ module.exports = {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
       });
 
       const rows = response.data.values || [];
@@ -752,7 +752,7 @@ module.exports = {
       const sheets = getGoogleSheetsClient();
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:S`,
+        range: `${SHEET_NAME}!A:T`,
       });
 
       const rows = response.data.values || [];
