@@ -1015,8 +1015,8 @@
                 <div style="font-size: 11px; color: #555;">${upc}</div>
               </div>
 
-              <!-- RIGHT: Inline Editable Fields including Notes -->
-              <div style="flex: 1.4; min-width: 320px; display: grid; grid-template-columns: 0.8fr 0.8fr 1.6fr; gap: 10px; align-items: start;">
+              <!-- RIGHT: Inline Editable Fields including Notes and Tracking Number -->
+              <div style="flex: 1.4; min-width: 420px; display: grid; grid-template-columns: 0.8fr 0.8fr 1fr 1.2fr; gap: 10px; align-items: start;">
                 <div>
                   <label style="font-size: 11px; color: #666; font-weight: 600;">Inspection Status</label>
                   <select class="editable-field" data-field="Inspection Status" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" style="width: 100%; padding: 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 12px;">
@@ -1035,6 +1035,11 @@
                     <option value="Done Shelf">Done Shelf</option>
                     <option value="Production Shelf">Production Shelf</option>
                   </select>
+                </div>
+
+                <div>
+                  <label style="font-size: 11px; color: #666; font-weight: 600;">Tracking Number</label>
+                  <input type="text" class="editable-field line-item-tracking" data-field="Tracking Number" data-po="${invoice['PO Number']}" data-si-doc="${invoice['SI Doc Number']}" data-li-idx="${idx + 1}" placeholder="Tracking #" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
                 </div>
 
                 <div>
@@ -1153,15 +1158,21 @@
                   <span style="white-space: nowrap;"><strong>Ship Date:</strong> ${formatDate(invoice['Ship Date'])}</span>
                   <span style="white-space: nowrap;"><strong>Total:</strong> ${formatCurrency(invoice['Document Total'])}</span>
                   <span style="white-space: nowrap;"><strong>Line Items:</strong> ${invoice['Line Items Count']}</span>
-                  <span style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                  <span style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
                     <strong>Tracking Number:</strong> 
                     <input type="text" 
-                           class="tracking-number-input" 
+                           class="invoice-tracking-input" 
                            data-po="${invoice['PO Number']}" 
                            data-si-doc="${invoice['SI Doc Number']}" 
                            value="${invoice['Tracking Number'] || ''}" 
                            placeholder="Enter tracking #" 
                            style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; width: 150px;">
+                    <button class="copy-tracking-btn" 
+                            data-po="${invoice['PO Number']}" 
+                            data-si-doc="${invoice['SI Doc Number']}" 
+                            style="padding: 4px 12px; background: #4285f4; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 500;">
+                      Copy to All
+                    </button>
                   </span>
                 </div>
               </div>
@@ -1191,10 +1202,12 @@
 
               const inspectionStatusSelect = document.querySelector(`select[data-field="Inspection Status"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
               const movedToOtherShelfSelect = document.querySelector(`select[data-field="Moved to Other Shelf"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
+              const trackingNumberInput = document.querySelector(`input[data-field="Tracking Number"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
               const inspectionNotesTextarea = document.querySelector(`textarea[data-field="Inspection Notes"][data-po="${poNumber}"][data-si-doc="${siDocNumber}"][data-li-idx="${liIdx}"]`);
 
               if (inspectionStatusSelect && li.inspectionStatus) inspectionStatusSelect.value = li.inspectionStatus;
               if (movedToOtherShelfSelect && li.movedToOtherShelf) movedToOtherShelfSelect.value = li.movedToOtherShelf;
+              if (trackingNumberInput && li.trackingNumber) trackingNumberInput.value = li.trackingNumber;
               if (inspectionNotesTextarea && li.inspectionNotes) inspectionNotesTextarea.value = li.inspectionNotes;
             });
           });
@@ -1302,7 +1315,6 @@
 
       const statusEl = document.getElementById('save-all-status');
       const fields = resultsDiv.querySelectorAll('.editable-field');
-      const trackingFields = resultsDiv.querySelectorAll('.tracking-number-input');
       const poDate = document.getElementById('poActualShippingDate')?.value || '';
       const poInspector = document.getElementById('poInspector')?.value || '';
 
@@ -1342,24 +1354,6 @@
         const bucket = grouped.get(key);
         if (!bucket.updatesMap.has(liIdx)) bucket.updatesMap.set(liIdx, { lineItemIndex: Number(liIdx), updates: {} });
         bucket.updatesMap.get(liIdx).updates[fieldName] = val;
-      });
-
-      // Apply tracking numbers to all line items of each invoice
-      trackingFields.forEach(field => {
-        const poNumber = field.dataset.po;
-        const siDocNumber = field.dataset.siDoc;
-        const trackingNumber = field.value.trim();
-        
-        if (!poNumber || !siDocNumber) return;
-        
-        const key = `${poNumber}|${siDocNumber}`;
-        if (grouped.has(key)) {
-          const bucket = grouped.get(key);
-          // Apply tracking number to all line items of this invoice
-          bucket.updatesMap.forEach(u => {
-            u.updates['Tracking Number'] = trackingNumber;
-          });
-        }
       });
 
       // Apply header-level Actual Shipping Date and Inspector to every line item bucket
@@ -1420,41 +1414,36 @@
       }
     });
 
-    // Auto-save tracking number on blur or Enter key
-    resultsDiv.addEventListener('blur', async (e) => {
-      if (!e.target.classList.contains('tracking-number-input')) return;
+    // Copy tracking number from invoice box to all line items
+    resultsDiv.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('copy-tracking-btn')) return;
       
-      const input = e.target;
-      const poNumber = input.dataset.po;
-      const siDocNumber = input.dataset.siDoc;
-      const trackingNumber = input.value.trim();
+      const btn = e.target;
+      const poNumber = btn.dataset.po;
+      const siDocNumber = btn.dataset.siDoc;
       
-      console.log(`💾 Saving tracking number for PO: ${poNumber}, SI Doc: ${siDocNumber}`);
+      // Get tracking number from invoice box input
+      const invoiceTrackingInput = document.querySelector(`input.invoice-tracking-input[data-po="${poNumber}"][data-si-doc="${siDocNumber}"]`);
+      const trackingNumber = invoiceTrackingInput ? invoiceTrackingInput.value.trim() : '';
       
-      try {
-        const resp = await fetch('/api/updateTrackingNumber', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ poNumber, siDocNumber, trackingNumber })
-        });
-        
-        if (resp.ok) {
-          input.style.borderColor = '#4caf50';
-          setTimeout(() => { input.style.borderColor = '#ddd'; }, 1000);
-        } else {
-          throw new Error('Save failed');
-        }
-      } catch (err) {
-        console.error('Tracking number save error:', err);
-        input.style.borderColor = '#f44336';
-        setTimeout(() => { input.style.borderColor = '#ddd'; }, 2000);
+      if (!trackingNumber) {
+        alert('Please enter a tracking number before copying to line items.');
+        return;
       }
-    }, true);
-
-    resultsDiv.addEventListener('keypress', (e) => {
-      if (e.target.classList.contains('tracking-number-input') && e.key === 'Enter') {
-        e.target.blur();
-      }
+      
+      // Apply to all line items of this invoice
+      const lineItemTrackingInputs = document.querySelectorAll(`input.line-item-tracking[data-po="${poNumber}"][data-si-doc="${siDocNumber}"]`);
+      lineItemTrackingInputs.forEach(input => {
+        input.value = trackingNumber;
+      });
+      
+      // Visual feedback
+      btn.textContent = '✓ Copied';
+      btn.style.background = '#34a853';
+      setTimeout(() => {
+        btn.textContent = 'Copy to All';
+        btn.style.background = '#4285f4';
+      }, 1500);
     });
 
     searchInput.addEventListener('input', async (e) => {

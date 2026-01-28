@@ -81,11 +81,74 @@ app.post('/api/search', async (req, res) => {
       console.warn('Google Sheet save skipped:', sheetErr.message);
     }
 
+    // Merge editable fields from Google Sheets back into invoices
+    try {
+      const sheetLineItems = await googleSheets.getLineItemsForPO(query);
+      console.log(`✓ Retrieved ${sheetLineItems.length} line item(s) from Google Sheet for merge`);
+      
+      if (sheetLineItems.length > 0) {
+        console.log('📋 Sample sheet data:', JSON.stringify(sheetLineItems[0], null, 2));
+      }
+      
+      // Merge editable fields into each invoice's line items
+      for (const invoice of invoices) {
+        if (!invoice._lineItems || !Array.isArray(invoice._lineItems)) {
+          console.log(`⚠️ No line items array for invoice ${invoice['SI Doc Number']}`);
+          continue;
+        }
+        
+        console.log(`🔍 Processing invoice ${invoice['SI Doc Number']} with ${invoice._lineItems.length} line items`);
+        
+        for (let idx = 0; idx < invoice._lineItems.length; idx++) {
+          const lineItem = invoice._lineItems[idx];
+          const lineItemIndex = idx + 1; // 1-based index for Google Sheets
+          
+          // Normalize for comparison (convert to string and trim)
+          const invPO = String(invoice['PO Number']).trim();
+          const invSIDoc = String(invoice['SI Doc Number']).trim();
+          const invIdx = String(lineItemIndex).trim();
+          
+          console.log(`🔍 Looking for: PO="${invPO}" SIDoc="${invSIDoc}" Idx="${invIdx}"`);
+          
+          // Find matching row in Google Sheets by PO, SI Doc, and Line Item Index
+          const sheetMatch = sheetLineItems.find(sl => {
+            const sheetPO = String(sl['PO Number'] || '').trim();
+            const sheetSIDoc = String(sl['SI Doc Number'] || '').trim();
+            const sheetIdx = String(sl['Line Item Index'] || '').trim();
+            
+            const match = sheetPO === invPO && sheetSIDoc === invSIDoc && sheetIdx === invIdx;
+            
+            if (!match && sheetPO === invPO) {
+              console.log(`  ❌ Mismatch: Sheet SIDoc="${sheetSIDoc}" vs Inv="${invSIDoc}", Sheet Idx="${sheetIdx}" vs Inv="${invIdx}"`);
+            }
+            
+            return match;
+          });
+          
+          if (sheetMatch) {
+            // Merge editable fields from Google Sheets
+            lineItem.actualShippingDate = sheetMatch['Actual Shipping Date'] || '';
+            lineItem.inspector = sheetMatch['Inspector'] || '';
+            lineItem.inspectionStatus = sheetMatch['Inspection Status'] || '';
+            lineItem.inspectionNotes = sheetMatch['Inspection Notes'] || '';
+            lineItem.movedToOtherShelf = sheetMatch['Moved to Other Shelf'] || '';
+            lineItem.trackingNumber = sheetMatch['Tracking Number'] || '';
+            
+            console.log(`✅ Merged line item ${lineItemIndex}: Status="${lineItem.inspectionStatus}", Shelf="${lineItem.movedToOtherShelf}", Tracking="${lineItem.trackingNumber}", Notes="${lineItem.inspectionNotes}"`);
+          } else {
+            console.log(`⚠️ No sheet match for PO="${invPO}" SIDoc="${invSIDoc}" Idx=${invIdx}"`);
+          }
+        }
+      }
+    } catch (mergeErr) {
+      console.error('❌ Google Sheet merge error:', mergeErr.message);
+    }
+
     // Return results with all invoices and cached data
     res.json({
       success: true,
       query,
-      invoices: invoices, // Array of all invoices
+      invoices: invoices, // Array of all invoices with merged editable fields
       timestamp: new Date().toISOString()
     });
 

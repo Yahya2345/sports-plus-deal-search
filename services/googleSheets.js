@@ -447,19 +447,19 @@ module.exports = {
   saveLineItemsForPO: async function saveLineItemsForPO(poNumber, invoices) {
     const sheets = getGoogleSheetsClient();
 
-    // Read headers to determine order (up to column U = 21 columns)
+    // Read headers to determine order (up to column T = 20 columns)
     const headerResp = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A1:U1`,
+      range: `${SHEET_NAME}!A1:T1`,
     });
     const headers = headerResp.data.values ? headerResp.data.values[0] : [];
 
-    // Extended header set with 7 new columns (O-U)
+    // Extended header set with 6 editable columns (O-T)
     const expected = [
       'PO Number', 'SI Doc Number', 'SI Doc Date', 'Supplier Name', 'Ship Date', 'Invoice Total',
       'Invoice Status', 'Line Item Index', 'Item Description', 'Quantity Shipped', 'Unit Price',
       'Line Item Total', 'Item Status', 'Last Updated', 'Actual Shipping Date', 'Inspector',
-      'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf'
+      'Inspection Status', 'Inspection Notes', 'Moved to Other Shelf', 'Tracking Number'
     ];
 
     if (!headers || headers.length === 0) {
@@ -510,6 +510,9 @@ module.exports = {
 
       const lineItems = Array.isArray(inv._lineItems) ? inv._lineItems : [];
 
+      // Get invoice-level tracking number if available
+      const invoiceTrackingNumber = inv['Tracking Number'] || '';
+
       if (lineItems.length === 0) {
         // Create a placeholder row so PO shows up even if no line items
         const lineItemIndex = 0;
@@ -535,22 +538,25 @@ module.exports = {
           'Inspection Status': '',
           'Inspection Notes': '',
           'Moved to Other Shelf': '',
+          'Tracking Number': invoiceTrackingNumber, // Use invoice-level tracking number
         };
 
         const newRow = cols.map(h => placeholder[h] ?? '');
 
         if (existingMap.has(key)) {
-          // UPDATE: Preserve columns O-S (editable fields)
+          // UPDATE: Preserve columns O-T (editable fields including Tracking Number)
           const existing = existingMap.get(key);
-          const preservedFields = existing.existingData.slice(14, 19); // Columns O-S (indices 14-18)
+          const preservedFields = existing.existingData.slice(14, 20); // Columns O-T (indices 14-19)
           newRow[14] = preservedFields[0] || ''; // Actual Shipping Date
           newRow[15] = preservedFields[1] || ''; // Inspector
           newRow[16] = preservedFields[2] || ''; // Inspection Status
           newRow[17] = preservedFields[3] || ''; // Inspection Notes
           newRow[18] = preservedFields[4] || ''; // Moved to Other Shelf
+          // If sheet has tracking number, keep it; otherwise use invoice tracking number
+          newRow[19] = preservedFields[5] || invoiceTrackingNumber || ''; // Tracking Number
 
           rowsToUpdate.push({
-            range: `${SHEET_NAME}!A${existing.rowNumber}:S${existing.rowNumber}`,
+            range: `${SHEET_NAME}!A${existing.rowNumber}:T${existing.rowNumber}`,
             values: [newRow]
           });
         } else {
@@ -590,22 +596,25 @@ module.exports = {
           'Inspection Status': '',
           'Inspection Notes': '',
           'Moved to Other Shelf': '',
+          'Tracking Number': invoiceTrackingNumber, // Use invoice-level tracking number
         };
 
         const newRow = cols.map(h => rowObj[h] ?? '');
 
         if (existingMap.has(key)) {
-          // UPDATE: Preserve columns O-S (editable fields)
+          // UPDATE: Preserve columns O-T (editable fields including Tracking Number)
           const existing = existingMap.get(key);
-          const preservedFields = existing.existingData.slice(14, 19); // Columns O-S (indices 14-18)
+          const preservedFields = existing.existingData.slice(14, 20); // Columns O-T (indices 14-19)
           newRow[14] = preservedFields[0] || ''; // Actual Shipping Date
           newRow[15] = preservedFields[1] || ''; // Inspector
           newRow[16] = preservedFields[2] || ''; // Inspection Status
           newRow[17] = preservedFields[3] || ''; // Inspection Notes
           newRow[18] = preservedFields[4] || ''; // Moved to Other Shelf
+          // If sheet has tracking number, keep it; otherwise use invoice tracking number
+          newRow[19] = preservedFields[5] || invoiceTrackingNumber || ''; // Tracking Number
 
           rowsToUpdate.push({
-            range: `${SHEET_NAME}!A${existing.rowNumber}:S${existing.rowNumber}`,
+            range: `${SHEET_NAME}!A${existing.rowNumber}:T${existing.rowNumber}`,
             values: [newRow]
           });
         } else {
