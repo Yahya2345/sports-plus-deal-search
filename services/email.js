@@ -27,6 +27,7 @@ const PO_INITIALS_TO_EMAIL = {
   'BO': 'weoehm@comcast.net',
   'KS': 'katie@sportsplusteam.com',
   'MC': 'sportsplus.mac@gmail.com',
+  'MAC': 'mac@sportsplusteam.com',
   'SMR': 'coachsteve@sportsplusteam.com',
   'SN': 'sportsplus.shawn@gmail.com',
   'MA': 'mark@sportsplusteam.com',
@@ -40,7 +41,7 @@ const PO_INITIALS_TO_EMAIL = {
  */
 function getEmailRecipients(poNumber) {
   // Always include base recipients
-  const baseRecipients = process.env.EMAIL_TO || 'zaeemshahzad95@gmail.com, ken@sportsplusteam.com';
+  const baseRecipients = process.env.EMAIL_TO || 'zaeemshahzad95@gmail.com, ken@sportsplusteam.com, travis@sportsplusteam.com';
   const recipients = baseRecipients.split(',').map(e => e.trim());
   
   if (!poNumber) return recipients.join(', ');
