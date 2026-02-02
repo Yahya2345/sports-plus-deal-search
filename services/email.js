@@ -441,4 +441,5 @@ module.exports = {
   sendPOCompletionEmail,
   testEmailConnection,
   getEmailRecipients,
+  transporter, // Export transporter for backlog checker
 };

@@ -558,6 +558,69 @@
       font-weight: 500;
     }
 
+    /* Backlog Styles */
+    .log-backlog-btn {
+      margin-top: 20px;
+      padding: 15px 40px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .log-backlog-btn:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    .backlog-success {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .backlog-success h2 {
+      color: #28a745;
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    .backlog-success p {
+      color: #495057;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .search-new-btn {
+      padding: 15px 40px;
+      background: #ff6b35;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+
+    .search-new-btn:hover {
+      background: #e55a2b;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    }
+
     /* Responsive Design */
     @media (max-width: 1024px) {
       .main-box {
@@ -635,6 +698,7 @@
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('results');
     let currentInvoices = [];
+    let currentSearchQuery = '';
 
     // Ensure date picker opens when clicking anywhere on date inputs
     document.addEventListener('click', (e) => {
@@ -1058,7 +1122,10 @@
       currentInvoices = invoices || [];
 
       if ((!invoices || invoices.length === 0) && (!deals || deals.length === 0)) {
-        resultsDiv.innerHTML = '<div class="no-results">No data found matching your search.</div>';
+        resultsDiv.innerHTML = `
+          <div class="no-results">No data found matching your search.</div>
+          <div style="text-align: center;"><button class="log-backlog-btn" onclick="addToBacklog('${currentSearchQuery}')">📋 Log to Backlog</button></div>
+        `;
         return;
       }
 
@@ -1185,6 +1252,7 @@
       } else {
         contentHTML += '<div class="section-header">📋 Sports Inc Invoices</div>';
         contentHTML += '<div class="no-results">No invoices found in Sports Inc Tool</div>';
+        contentHTML += `<div style="text-align: center;"><button class="log-backlog-btn" onclick="addToBacklog('${currentSearchQuery}')">📋 Log to Backlog</button></div>`;
       }
 
       contentHTML += '</div></div>';
@@ -1448,6 +1516,7 @@
 
     searchInput.addEventListener('input', async (e) => {
       const query = e.target.value.trim();
+      currentSearchQuery = query; // Store current search
 
       clearTimeout(searchTimeout);
 
@@ -1475,6 +1544,56 @@
         }
       }, 500);
     });
+
+    // ========================================
+    // BACKLOG MANAGEMENT
+    // ========================================
+
+    // Add PO to backlog
+    async function addToBacklog(poNumber) {
+      if (!poNumber) {
+        alert('No PO number to add to backlog');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/backlog/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ poNumber })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Show success message with Search New PO button
+          resultsDiv.innerHTML = `
+            <div class="backlog-success">
+              <h2>✅ PO Moved to Backlog</h2>
+              <p>
+                <strong>PO ${poNumber}</strong> has been added to the backlog.<br><br>
+                We'll automatically check daily and notify you via email when it becomes available in the system.
+              </p>
+              <button class="search-new-btn" onclick="searchNewPO()">🔍 Search New PO</button>
+            </div>
+          `;
+        } else {
+          alert(`⚠️ ${data.error || 'Failed to add to backlog'}`);
+        }
+      } catch (error) {
+        console.error('Error adding to backlog:', error);
+        alert('❌ Failed to add to backlog. Please try again.');
+      }
+    }
+
+    // Search New PO - Clear results and focus search input
+    function searchNewPO() {
+      resultsDiv.innerHTML = '';
+      searchInput.value = '';
+      searchInput.focus();
+    }
+
+
   </script>
 </body>
 </html>

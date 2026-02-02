@@ -8,6 +8,8 @@ const axios = require('axios');
 const googleSheets = require('./services/googleSheets');
 const sportsInc = require('./services/sportsInc');
 const email = require('./services/email');
+const backlog = require('./services/backlog');
+const backlogChecker = require('./services/backlogChecker');
 
 const app = express();
 const PORT = process.env.PORT || 8888;
@@ -470,6 +472,107 @@ app.post('/api/updateLineItem', async (req, res) => {
 });
 
 // ========================================
+// BACKLOG ENDPOINTS
+// ========================================
+
+/**
+ * Add PO to backlog
+ * POST /api/backlog/add
+ * Body: { poNumber, addedBy }
+ */
+app.post('/api/backlog/add', async (req, res) => {
+  try {
+    const { poNumber } = req.body;
+
+    if (!poNumber) {
+      return res.status(400).json({ error: 'poNumber is required' });
+    }
+
+    console.log(`📋 Adding PO ${poNumber} to backlog`);
+
+    const result = await backlog.addToBacklog(poNumber);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    res.json({ success: true, message: result.message });
+
+  } catch (error) {
+    console.error('❌ Error adding to backlog:', error.message);
+    res.status(500).json({ error: 'Failed to add to backlog' });
+  }
+});
+
+/**
+ * Get all backlog items
+ * GET /api/backlog/list
+ */
+app.get('/api/backlog/list', async (req, res) => {
+  try {
+    console.log('📋 Fetching backlog list...');
+
+    const backlogItems = await backlog.getBacklogList();
+
+    res.json({ success: true, backlog: backlogItems });
+
+  } catch (error) {
+    console.error('❌ Error fetching backlog:', error.message);
+    res.status(500).json({ error: 'Failed to fetch backlog' });
+  }
+});
+
+/**
+ * Remove PO from backlog
+ * DELETE /api/backlog/remove/:poNumber
+ */
+app.delete('/api/backlog/remove/:poNumber', async (req, res) => {
+  try {
+    const { poNumber } = req.params;
+
+    if (!poNumber) {
+      return res.status(400).json({ error: 'poNumber is required' });
+    }
+
+    console.log(`📋 Removing PO ${poNumber} from backlog`);
+
+    const result = await backlog.removeFromBacklog(poNumber);
+
+    if (!result.success) {
+      return res.status(404).json({ error: result.message });
+    }
+
+    res.json({ success: true, message: result.message });
+
+  } catch (error) {
+    console.error('❌ Error removing from backlog:', error.message);
+    res.status(500).json({ error: 'Failed to remove from backlog' });
+  }
+});
+
+/**
+ * Test backlog checker manually
+ * GET /api/backlog/test
+ */
+app.get('/api/backlog/test', async (req, res) => {
+  try {
+    console.log('🧪 Manual backlog test triggered...');
+    
+    // Run the backlog checker immediately
+    await backlogChecker.checkBacklogPOs();
+    
+    res.json({ 
+      success: true, 
+      message: 'Backlog check completed. Check console for results.' 
+    });
+
+  } catch (error) {
+    console.error('❌ Error running backlog test:', error.message);
+    res.status(500).json({ error: 'Failed to run backlog test' });
+  }
+});
+
+// ========================================
 // SERVER
 // ========================================
 
@@ -492,9 +595,16 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`   GET  /api/testEmail - Test email service and send test email`);
   console.log(`   GET  /api/cache/invoices - Get all cached invoices`);
   console.log(`   POST /api/cache/refresh - Refresh cache for PO Number`);
+  console.log(`   POST /api/backlog/add - Add PO to backlog`);
+  console.log(`   GET  /api/backlog/list - Get all backlog items`);
+  console.log(`   DELETE /api/backlog/remove/:poNumber - Remove PO from backlog`);
+  console.log(`   GET  /api/backlog/test - Test backlog checker manually`);
   console.log(`\n✓ Google Sheets: ${process.env.GOOGLE_SHEETS_ID ? 'Configured' : 'NOT CONFIGURED'}`);
   console.log(`✓ Sports Inc API: ${process.env.SPORTSINC_API_KEY ? 'Configured' : 'NOT CONFIGURED'}`);
   console.log(`\n✅ Server is listening and ready for requests!\n`);
+  
+  // Start daily backlog checker
+  backlogChecker.startBacklogChecker();
 });
 
 server.on('error', (error) => {
