@@ -640,11 +640,205 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Login Page Styles */
+    #loginPage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    #loginPage.hidden {
+      display: none;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      padding: 50px 60px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .login-logo {
+      font-size: 36px;
+      font-weight: bold;
+      color: #2d3e50;
+      margin-bottom: 10px;
+    }
+
+    .login-logo span {
+      color: #ff6b35;
+    }
+
+    .login-title {
+      font-size: 24px;
+      color: #2d3e50;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .login-subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .login-input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .login-input:focus {
+      border-color: #ff6b35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .login-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-error {
+      color: #dc3545;
+      background: #ffe6e6;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .login-error.show {
+      display: block;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    /* Logout Button Styles */
+    .logout-button {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      padding: 10px 20px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .logout-button:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+    }
+
+    .logout-button:active {
+      transform: translateY(0);
+    }
+
+    header {
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .logout-button {
+        top: 15px;
+        right: 15px;
+        padding: 8px 15px;
+        font-size: 12px;
+      }
+
+      .login-container {
+        padding: 40px 30px;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Login Page -->
+  <div id="loginPage">
+    <div class="login-container">
+      <div class="login-logo">Sports <span>Plus</span></div>
+      <h2 class="login-title">Deal Search Portal</h2>
+      <p class="login-subtitle">Enter password to access the portal</p>
+      
+      <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+      
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="login-input-group">
+          <input
+            type="password"
+            id="loginPassword"
+            class="login-input"
+            placeholder="Enter password"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+        <button type="submit" class="login-button" id="loginButton">Login</button>
+      </form>
+    </div>
+  </div>
+
   <header>
     <div class="logo">Sports <span>Plus</span></div>
+    <button class="logout-button" onclick="handleLogout()" title="Logout">Logout</button>
   </header>
 
   <main>
@@ -695,6 +889,157 @@
   </footer>
 
   <script>
+    // ========================================
+    // AUTHENTICATION & SESSION MANAGEMENT
+    // ========================================
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const CHECK_INTERVAL = 60 * 1000; // Check every 1 minute
+    
+    // Check authentication status on page load
+    function checkAuth() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      const lastActivity = localStorage.getItem('lastActivity');
+      
+      if (!isLoggedIn || isLoggedIn !== 'true') {
+        showLoginPage();
+        return false;
+      }
+      
+      // Check if session has expired (24 hours of inactivity)
+      if (lastActivity) {
+        const timeSinceActivity = Date.now() - parseInt(lastActivity);
+        if (timeSinceActivity > SESSION_TIMEOUT) {
+          console.log('Session expired after 24 hours of inactivity');
+          handleLogout();
+          return false;
+        }
+      }
+      
+      // Update last activity timestamp
+      updateLastActivity();
+      hideLoginPage();
+      return true;
+    }
+    
+    // Show login page
+    function showLoginPage() {
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.querySelector('header').style.display = 'none';
+      document.querySelector('main').style.display = 'none';
+      document.querySelector('footer').style.display = 'none';
+    }
+    
+    // Hide login page
+    function hideLoginPage() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.querySelector('header').style.display = 'block';
+      document.querySelector('main').style.display = 'block';
+      document.querySelector('footer').style.display = 'grid';
+    }
+    
+    // Handle login form submission
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const passwordInput = document.getElementById('loginPassword');
+      const loginButton = document.getElementById('loginButton');
+      const loginError = document.getElementById('loginError');
+      const password = passwordInput.value;
+      
+      // Disable button during request
+      loginButton.disabled = true;
+      loginButton.textContent = 'Logging in...';
+      loginError.classList.remove('show');
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store login state and timestamp
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('lastActivity', Date.now().toString());
+          
+          // Hide login page and show portal
+          hideLoginPage();
+          passwordInput.value = '';
+          
+          console.log('✅ Login successful');
+        } else {
+          // Show error message
+          loginError.classList.add('show');
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        loginError.textContent = 'Connection error. Please try again.';
+        loginError.classList.add('show');
+      } finally {
+        // Re-enable button
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+      }
+    }
+    
+    // Handle logout
+    function handleLogout() {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('lastActivity');
+      showLoginPage();
+      console.log('✅ Logged out successfully');
+    }
+    
+    // Update last activity timestamp
+    function updateLastActivity() {
+      localStorage.setItem('lastActivity', Date.now().toString());
+    }
+    
+    // Track user activity (mouse, keyboard, scroll)
+    function trackActivity() {
+      document.addEventListener('mousemove', updateLastActivity, { passive: true });
+      document.addEventListener('mousedown', updateLastActivity, { passive: true });
+      document.addEventListener('keydown', updateLastActivity, { passive: true });
+      document.addEventListener('scroll', updateLastActivity, { passive: true });
+      document.addEventListener('touchstart', updateLastActivity, { passive: true });
+    }
+    
+    // Check session expiry periodically
+    function startSessionMonitor() {
+      setInterval(() => {
+        const lastActivity = localStorage.getItem('lastActivity');
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        
+        if (isLoggedIn === 'true' && lastActivity) {
+          const timeSinceActivity = Date.now() - parseInt(lastActivity);
+          
+          // If 24 hours of inactivity, logout
+          if (timeSinceActivity > SESSION_TIMEOUT) {
+            console.log('⏰ Auto-logout: 24 hours of inactivity');
+            alert('Your session has expired due to inactivity. Please login again.');
+            handleLogout();
+          }
+        }
+      }, CHECK_INTERVAL);
+    }
+    
+    // Initialize authentication on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      trackActivity();
+      startSessionMonitor();
+    });
+    
+    // ========================================
+    // MAIN APPLICATION CODE
+    // ========================================
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('results');
     let currentInvoices = [];

@@ -24,6 +24,35 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ========================================
+// AUTHENTICATION ENDPOINT
+// ========================================
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'Password is required' });
+    }
+
+    const correctPassword = process.env.LOGIN_PASSWORD;
+    
+    if (!correctPassword) {
+      console.error('⚠️ LOGIN_PASSWORD not configured in environment variables');
+      return res.status(500).json({ success: false, message: 'Server configuration error' });
+    }
+
+    if (password === correctPassword) {
+      return res.json({ success: true, message: 'Login successful' });
+    } else {
+      return res.status(401).json({ success: false, message: 'Incorrect password' });
+    }
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 function hasRealLineItems(invoice) {
   if (!invoice || !invoice._lineItems || invoice._lineItems.length === 0) return false;
   const firstDesc = invoice._lineItems[0]?.description || '';
