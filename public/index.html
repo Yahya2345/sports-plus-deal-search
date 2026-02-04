@@ -897,6 +897,15 @@
     
     // Check authentication status on page load
     function checkAuth() {
+      // Check for PO parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const poFromUrl = urlParams.get('po');
+      
+      // Store PO parameter if present (will be used after login)
+      if (poFromUrl) {
+        localStorage.setItem('pendingPOSearch', poFromUrl);
+      }
+      
       const isLoggedIn = localStorage.getItem('isLoggedIn');
       const lastActivity = localStorage.getItem('lastActivity');
       
@@ -918,6 +927,16 @@
       // Update last activity timestamp
       updateLastActivity();
       hideLoginPage();
+      
+      // Check for pending PO search (user already logged in)
+      const pendingPO = localStorage.getItem('pendingPOSearch');
+      if (pendingPO) {
+        localStorage.removeItem('pendingPOSearch');
+        setTimeout(() => {
+          performAutoSearch(pendingPO);
+        }, 500); // Small delay to ensure DOM is ready
+      }
+      
       return true;
     }
     
@@ -972,6 +991,15 @@
           passwordInput.value = '';
           
           console.log('✅ Login successful');
+          
+          // Check for pending PO search from email link
+          const pendingPO = localStorage.getItem('pendingPOSearch');
+          if (pendingPO) {
+            localStorage.removeItem('pendingPOSearch');
+            setTimeout(() => {
+              performAutoSearch(pendingPO);
+            }, 500); // Small delay to ensure portal is fully loaded
+          }
         } else {
           // Show error message
           loginError.classList.add('show');
@@ -1028,6 +1056,38 @@
           }
         }
       }, CHECK_INTERVAL);
+    }
+    
+    // Perform auto-search from email link
+    async function performAutoSearch(poNumber) {
+      const searchInput = document.getElementById('searchInput');
+      const resultsDiv = document.getElementById('results');
+      
+      if (searchInput && poNumber) {
+        console.log('🔗 Auto-searching from email link:', poNumber);
+        searchInput.value = poNumber;
+        searchInput.focus();
+        
+        // Display loading state
+        resultsDiv.innerHTML = '<div class="loading">🔍 Searching invoice data...</div>';
+        
+        // Trigger search directly
+        try {
+          const searchData = await unifiedSearch(poNumber);
+          await displayResults(searchData);
+        } catch (error) {
+          console.error('Auto-search error:', error);
+          resultsDiv.innerHTML = `
+            <div class="error">
+              ⚠️ <strong>Error:</strong> ${error.message}
+            </div>
+          `;
+        }
+        
+        // Clean URL (remove ?po= parameter)
+        const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
     }
     
     // Initialize authentication on page load
